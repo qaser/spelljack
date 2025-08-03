@@ -41,21 +41,28 @@ def show_enemy_window():
 
 def battle_round_window():
     return Window(
-        # Format("{player_bar}\n{mob_bar}"),
+        Const("💫 <b>Потоки магии сошлись - протяни руку и возьми своё!</b>\n"),
         Format("{player_bar}"),
-        # Format("Твои чары: {spells}"),
         Row(
             Button(
-                Const("🔥 Кастовать ещё"),
+                Const("🌀 Поглотить ещё"),
                 id="cast",
                 on_click=selected.on_cast
             ),
             Button(
-                Const("🧘 Стоп"),
+                Const("🫳 Произнести заклинание"),
                 id="stop",
                 on_click=selected.on_stop
             ),
         ),
         state=Battle.battle_round,
         getter=getters.get_battle_state
+    )
+
+
+def round_step_window():
+    return Window(
+        Const("🔮 Ожидание... магия накапливается..."),
+        state=Battle.round_step,
+        getter=getters.round_step_getter
     )

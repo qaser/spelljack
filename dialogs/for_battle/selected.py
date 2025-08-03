@@ -22,34 +22,38 @@ def draw_initial_spell(deck: list) -> dict:
     return random.choice(deck)
 
 
-def create_battle(player_id: int, mob_id: ObjectId) -> ObjectId:
-    shuffled_deck = random.sample(FULL_DECK, len(FULL_DECK))
+def create_battle(player_id, mob_id):
+    from random import shuffle
+
+    full_deck = [
+        {"name": f"Чары {i}", "power": i, "type": t}
+        for i in range(1, 12)
+        for t in ["страсть", "нежность", "искушение", "соблазн"]
+    ]
+    shuffle(full_deck)
 
     battle = {
         "player_id": player_id,
         "mob_id": mob_id,
+        "deck": full_deck,
+        "round_number": 1,
         "player_state": {
-            "hp": 5,
             "hand": [],
-            "casted": False,
-            "is_turn": True
+            "outfit_left": 6,
+            "stop": False
         },
         "mob_state": {
-            "hp": 5,
             "hand": [],
-            "casted": False
+            "outfit_left": 6,
+            "stop": False
         },
-        "shared_deck": shuffled_deck,
-        "turn_number": 1,
         "status": "active",
         "winner": None,
-        "history": [],
         "created_at": dt.datetime.now(),
         "updated_at": dt.datetime.now()
     }
+    return battles.insert_one(battle).inserted_id
 
-    result = battles.insert_one(battle)
-    return result.inserted_id
 
 
 async def on_generate_mob(callback, widget, manager: DialogManager):
@@ -67,61 +71,53 @@ async def on_battle_round(callback, widget, manager: DialogManager):
 
 
 async def on_cast(callback: CallbackQuery, button: Button, manager: DialogManager):
-    user_id = callback.from_user.id
     context = manager.current_context()
-    battle_id = ObjectId(context.dialog_data["battle_id"])
-    battle = battles.find_one({"_id": battle_id})
+    battle_id = context.dialog_data["battle_id"]
+    battle = battles.find_one({"_id": ObjectId(battle_id)})
 
-    player_state = battle["player_state"]
-    hand = player_state["hand"]
-    shared_deck = battle.get("shared_deck", [])
-
-    if not shared_deck:
-        await callback.answer("❗ Общая колода пуста!")
+    # Проверка — не остановился ли игрок
+    if battle["player_state"]["stop"]:
+        await callback.answer("Ты уже произнёс заклинание!")
         return
 
-    # Вытянуть верхнюю карту
-    new_card = shared_deck.pop(0)
-    hand.append(new_card)
+    deck = battle["deck"]
+    if not deck:
+        await callback.answer("Колода закончилась!")
+        return
 
-    total = sum(card["power"] for card in hand)
+    # Игрок тянет карту
+    drawn_card = deck.pop()
+    battle["player_state"]["hand"].append(drawn_card)
 
-    update = {
-        "player_state.hand": hand,
-        "shared_deck": shared_deck
-    }
-
-    history_entry = {
-        "actor": "player",
-        "action": "draw",
-        "card": new_card,
-        "result": None,
-        "timestamp": callback.message.date
-    }
-
+    # Проверка на перебор
+    total = sum(c["power"] for c in battle["player_state"]["hand"])
     if total > 21:
-        update["status"] = "finished"
-        update["winner"] = "mob"
-        history_entry["result"] = "overload"
+        battle["player_state"]["stop"] = True  # Автостоп
+        await callback.answer(f"💥 Перебор! ({total})")
+    else:
+        await callback.answer(f"✨ Новое заклинание: {drawn_card['name']} ({drawn_card['power']})")
 
-        battles.update_one({"_id": battle_id}, {
-            "$set": update,
-            "$push": {"history": history_entry}
-        })
+    # Обновление колоды и состояния
+    battles.update_one({"_id": battle["_id"]}, {"$set": {
+        "deck": deck,
+        "player_state": battle["player_state"],
+        "updated_at": dt.datetime.now()
+    }})
 
-        await callback.answer("💥 Ты перегрузился чарами!")
-        # Здесь позже переход к сцене поражения
-        return
+    await manager.dialog().switch_to(Battle.battle_round)
 
-    # Обновление БД
-    battles.update_one({"_id": battle_id}, {
-        "$set": update,
-        "$push": {"history": history_entry}
-    })
-
-    await callback.answer("✨ Ты вплёл новое заклинание!")
-    await manager.switch_to(Battle.battle_round)
 
 
 async def on_stop(callback: CallbackQuery, button: Button, manager: DialogManager):
-    await callback.answer("🧘 Пока не реализовано: стоп")
+    context = manager.current_context()
+    battle_id = context.dialog_data["battle_id"]
+    battle = battles.find_one({"_id": ObjectId(battle_id)})
+
+    battle["player_state"]["stop"] = True
+    battles.update_one({"_id": battle["_id"]}, {"$set": {
+        "player_state.stop": True,
+        "updated_at": dt.datetime.now()
+    }})
+
+    await callback.answer("🫳 Ты произнёс заклинание.")
+    await manager.dialog().switch_to(Battle.round_step)
