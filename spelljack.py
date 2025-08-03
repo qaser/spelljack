@@ -7,15 +7,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import (BotCommand, BotCommandScopeAllPrivateChats, Message,
                            ReplyKeyboardRemove)
 from aiogram_dialog import setup_dialogs
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from config.mongo_config import admins
 
 import utils.constants as const
 from config.bot_config import bot, dp
-from config.telegram_config import MY_TELEGRAM_ID, ADMIN_PASSWORD
+from config.mongo_config import admins
+from config.telegram_config import ADMIN_PASSWORD, MY_TELEGRAM_ID
 from handlers import battle, service
-from dialogs.battle_start import battle_start_dialog
-from dialogs.battle_round import battle_round_dialog
 
 
 @dp.message(Command('reset'))
@@ -99,9 +96,7 @@ async def main():
     dp.include_routers(
         service.router,
         battle.router,
-        battle_start_dialog,
-        battle_round_dialog
-        # battle.dialog,
+        battle.dialog,
     )
     await setup_bot_commands(bot)
     setup_dialogs(dp)

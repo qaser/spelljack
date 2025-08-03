@@ -11,7 +11,6 @@ from dialogs.for_request.states import Request
 
 from . import getters, keyboards, selected
 
-
 ID_SCROLL_PAGER = 'stations_pager'
 MAJOR_SCROLL_PAGER = 'majors_pager'
 REQUEST_SCROLL_PAGER = 'requests_pager'

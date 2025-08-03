@@ -1,4 +1,4 @@
-name: poks_bot workflow
+name: spelljack_bot workflow
 
 on: [push]
 

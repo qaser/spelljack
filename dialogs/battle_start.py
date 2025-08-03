@@ -1,17 +1,14 @@
-from aiogram_dialog import Window, Dialog, DialogManager
-from aiogram_dialog.widgets.kbd import Button, Row
-from aiogram_dialog.widgets.text import Format
-from aiogram.types import Message
-from config.mongo_config import mobs, players
-from services.mob_factory import generate_random_mob, get_random_mob_for_player
-from bson import ObjectId
 from aiogram.filters.state import State, StatesGroup
-from aiogram_dialog.widgets.text import Const
+from aiogram.types import Message
+from aiogram_dialog import Dialog, DialogManager, StartMode, Window
+from aiogram_dialog.widgets.kbd import Button, Cancel, Row
+from aiogram_dialog.widgets.text import Const, Format
+from bson import ObjectId
 
-from aiogram_dialog.widgets.kbd import Cancel
-from aiogram_dialog import StartMode
+from config.mongo_config import mobs, players
 from dialogs.battle_round import BattleRoundSG
 from services.battle_factory import create_battle
+from services.mob_factory import generate_random_mob, get_random_mob_for_player
 
 
 class BattleSG(StatesGroup):

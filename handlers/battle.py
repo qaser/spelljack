@@ -1,13 +1,23 @@
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
-from aiogram_dialog import DialogManager, StartMode
-from dialogs.battle_start import BattleSG
-from dialogs.battle_round import BattleRoundSG
-from services.battle_factory import create_battle
+from aiogram_dialog import Dialog, DialogManager, StartMode
+
+from dialogs.for_battle import windows
+from dialogs.for_battle.states import Battle
+
 
 router = Router()
+dialog =  Dialog(
+    windows.select_enemy_window(),
+    windows.show_enemy_window(),
+    windows.battle_round_window(),
+    # windows.round_step_window(),
+    # windows.round_finish_window(),
+    # windows.battle_finish_window(),
+)
+
 
 @router.message(Command("battle"))
 async def start_battle(message: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(BattleSG.CHOOSE, mode=StartMode.RESET_STACK)
+    await dialog_manager.start(Battle.select_enemy_type, mode=StartMode.RESET_STACK)
