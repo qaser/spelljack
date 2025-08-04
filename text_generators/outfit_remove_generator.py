@@ -49,9 +49,9 @@ def get_genitive(noun):
     parsed = morph.parse(noun)[0]
     return parsed.inflect({'gent'}).word
 
-def generate_undressing_text(opponent_name, clothing_type, spell):
+def generate_undressing_text(opponent_name, clothing_type, clothing_name, spell):
     # Выбираем случайный предмет одежды и склоняем его
-    clothing_item_nominative = clothing_type
+    clothing_item_nominative = clothing_name
     clothing_item_accusative = get_accusative(clothing_item_nominative)
     clothing_item_genitive = get_genitive(clothing_item_nominative)
 

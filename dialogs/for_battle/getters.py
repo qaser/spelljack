@@ -131,10 +131,10 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs):
     if mob_outfit_removed > 0 and strongest_player_spell:
         outfit_index = battle["mob_state"].get("outfit_left", 6)  # до вычитания
         outfit_key = str(outfit_index)
-        outfit = 'трусики'
-        print(outfit_index, outfit_key, outfit)
-        if outfit:
-            undressing_text = generate_undressing_text(mob_name, str(outfit_index), strongest_player_spell["name"])
+        outfit_name = 'трусики'
+        if outfit_name:
+            undressing_text = generate_undressing_text(mob_name, str(outfit_index), outfit_name, strongest_player_spell["name"])
+            print(undressing_text)
         else:
             undressing_text = f"{mob_name} потерял часть одежды."
     elif winner == "mob" and strongest_mob_spell:
