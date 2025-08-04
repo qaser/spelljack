@@ -2,8 +2,8 @@ import datetime as dt
 import random
 
 from config.mongo_config import mobs
-from utils.constants import (NAMES, OUTFIT_PARTS, PERSONAS, QUOTES, SUB_TITLES,
-                             TITLES)
+from utils.constants import (
+    NAMES, OUTFIT_PARTS, PERSONAS, QUOTES, SUB_TITLES, TITLES)
 
 
 def generate_random_mob():
@@ -13,7 +13,7 @@ def generate_random_mob():
     persona = random.choice(list(PERSONAS.keys()))
     persona_desc = random.choice(PERSONAS[persona]['descriptors'])
     magic_type = random.choice(['Флирт', 'Соблазн', 'Вожделение', 'Искушение'])
-    ai_style = random.choice(['aggressive', 'careful', 'balanced'])
+    strategy = random.choice(['aggressive', 'careful', 'balanced'])
 
     # Генерируем одежду
     outfit = {
@@ -35,7 +35,7 @@ def generate_random_mob():
         'persona': persona,
         'magic_type': magic_type,
         'level': 1,
-        'ai_style': ai_style,
+        'strategy': strategy,
         'outfit': outfit,
         'quotes': quotes,
         'max_hp': 6,

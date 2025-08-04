@@ -33,7 +33,7 @@ def show_enemy_window():
     return Window(
         Format('{enemy_intro}'),
         keyboards.mob_info_menu(),
-        Back(Const('🏃💨 Отказаться от поединка')),
+        Back(Const('❮❮ Отказаться от поединка')),
         state=Battle.show_enemy_info,
         getter=getters.get_mob_data
     )
@@ -41,28 +41,21 @@ def show_enemy_window():
 
 def battle_round_window():
     return Window(
-        Const("💫 <b>Потоки магии сошлись - протяни руку и возьми своё!</b>\n"),
+        Const("💞 <b>Потоки магии сошлись - протяни руку и возьми своё!</b>\n"),
+        # Format('♥️♥️♥️♥️🤍🤍'),
+        Format('{player_outfits}'),
+        Format('{mob_outfits}'),
         Format("{player_bar}"),
-        Row(
-            Button(
-                Const("🌀 Поглотить ещё"),
-                id="cast",
-                on_click=selected.on_cast
-            ),
-            Button(
-                Const("🫳 Произнести заклинание"),
-                id="stop",
-                on_click=selected.on_stop
-            ),
-        ),
+        keyboards.battle_round_menu(),
         state=Battle.battle_round,
         getter=getters.get_battle_state
     )
 
 
-def round_step_window():
+def round_result_window():
     return Window(
-        Const("🔮 Ожидание... магия накапливается..."),
-        state=Battle.round_step,
-        getter=getters.round_step_getter
+        Const("output_remove_generator"),
+        keyboards.round_result_menu(),
+        state=Battle.round_result,
+        getter=getters.round_result_getter
     )

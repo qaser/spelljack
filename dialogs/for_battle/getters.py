@@ -6,14 +6,14 @@ from bson import ObjectId
 from dateutil.relativedelta import relativedelta
 
 from config.mongo_config import battles, mobs, players
-from services.mob_factory import generate_random_mob, get_random_mob_for_player
-from utils import constants as const
 from dialogs.for_battle.states import Battle
+from services.mob_factory import generate_random_mob, get_random_mob_for_player
+from text_constants import battle_stories
 
 
 def generate_enemy_introduction(mob_data):
     appearance_key = None
-    for key in const.APPEARANCE.keys():
+    for key in battle_stories.APPEARANCE.keys():
         if key in mob_data['descriptors']['appearance'].lower():
             appearance_key = key
             break
@@ -22,10 +22,10 @@ def generate_enemy_introduction(mob_data):
     # outfit_text = generate_outfit_description(mob_data['outfit'])
     intro_parts = [
         f"Перед вами <b>{mob_data['name']}</b> — {mob_data['title']} {mob_data['sub_title']}.\n",
-        f"<i>{random.choice(const.APPEARANCE[appearance_key])}.</i>",
-        f"<i>{random.choice(const.BODY_DESCRIPTIONS)}.</i>\n",
+        f"<i>{random.choice(battle_stories.APPEARANCE[appearance_key])}.</i>",
+        f"<i>{random.choice(battle_stories.BODY_DESCRIPTIONS)}.</i>\n",
         f"<blockquote>{mob_data['quotes']['entry']}</blockquote>\n",
-        f"{random.choice(const.FINAL_TOUCH)} {random.choice(const.EPIGRAPH_PHRASES)}"
+        f"{random.choice(battle_stories.FINAL_TOUCH)} {random.choice(battle_stories.EPIGRAPH_PHRASES)}"
     ]
     return "\n".join(intro_parts)
 
@@ -76,7 +76,6 @@ async def get_battle_state(dialog_manager: DialogManager, **kwargs):
         "player_outfit": battle["player_state"].get("outfit_left", 6),
         "mob_outfit": battle["mob_state"].get("outfit_left", 6),
     }
-
 
 
 async def round_step_getter(dialog_manager: DialogManager, **kwargs):

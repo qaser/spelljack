@@ -11,11 +11,9 @@ from bson import ObjectId
 from config.mongo_config import battles, mobs, players
 from config.telegram_config import MY_TELEGRAM_ID
 from dialogs.for_battle.states import Battle
+from text_constants.deck import FULL_DECK
 
 from . import states
-
-
-from utils.constants import FULL_DECK
 
 
 def draw_initial_spell(deck: list) -> dict:
@@ -23,14 +21,12 @@ def draw_initial_spell(deck: list) -> dict:
 
 
 def create_battle(player_id, mob_id):
-    from random import shuffle
-
     full_deck = [
         {"name": f"Чары {i}", "power": i, "type": t}
         for i in range(1, 12)
         for t in ["страсть", "нежность", "искушение", "соблазн"]
     ]
-    shuffle(full_deck)
+    random.shuffle(full_deck)
 
     battle = {
         "player_id": player_id,
@@ -55,7 +51,6 @@ def create_battle(player_id, mob_id):
     return battles.insert_one(battle).inserted_id
 
 
-
 async def on_generate_mob(callback, widget, manager: DialogManager):
     await manager.switch_to(states.Battle.show_enemy_info)
 
@@ -70,7 +65,7 @@ async def on_battle_round(callback, widget, manager: DialogManager):
     await manager.switch_to(states.Battle.battle_round)
 
 
-async def on_cast(callback: CallbackQuery, button: Button, manager: DialogManager):
+async def on_draw(callback: CallbackQuery, button: Button, manager: DialogManager):
     context = manager.current_context()
     battle_id = context.dialog_data["battle_id"]
     battle = battles.find_one({"_id": ObjectId(battle_id)})

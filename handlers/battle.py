@@ -6,13 +6,12 @@ from aiogram_dialog import Dialog, DialogManager, StartMode
 from dialogs.for_battle import windows
 from dialogs.for_battle.states import Battle
 
-
 router = Router()
 dialog =  Dialog(
     windows.select_enemy_window(),
     windows.show_enemy_window(),
     windows.battle_round_window(),
-    windows.round_step_window(),
+    windows.round_result_window(),
     # windows.round_finish_window(),
     # windows.battle_finish_window(),
 )

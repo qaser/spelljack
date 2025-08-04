@@ -4,8 +4,8 @@ import logging
 from aiogram import F
 from aiogram.filters.command import Command, CommandObject
 from aiogram.fsm.context import FSMContext
-from aiogram.types import (BotCommand, BotCommandScopeAllPrivateChats, Message,
-                           ReplyKeyboardRemove)
+from aiogram.types import (
+    BotCommand, BotCommandScopeAllPrivateChats, Message, ReplyKeyboardRemove)
 from aiogram_dialog import setup_dialogs
 
 import utils.constants as const

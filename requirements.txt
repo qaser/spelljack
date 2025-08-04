@@ -36,12 +36,13 @@ pydantic==2.5.3
 pydantic_core==2.14.6
 pyflakes==2.4.0
 pymongo==4.13.2
+pymorphy3==2.0.4
+pymorphy3-dicts-ru==2.4.417150.4580142
 PySocks==1.7.1
 python-dateutil==2.9.0.post0
 python-docx==0.8.11
 python-dotenv==0.20.0
 pytz==2024.2
-redis==5.0.4
 six==1.16.0
 soupsieve==2.6
 typing_extensions==4.12.2
