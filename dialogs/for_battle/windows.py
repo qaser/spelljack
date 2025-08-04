@@ -41,11 +41,10 @@ def show_enemy_window():
 
 def battle_round_window():
     return Window(
-        Const("💞 <b>Потоки магии сошлись - протяни руку и возьми своё!</b>\n"),
-        # Format('♥️♥️♥️♥️🤍🤍'),
-        Format('{player_outfits}'),
-        Format('{mob_outfits}'),
-        Format("{player_bar}"),
+        Const("<b>Потоки магии сошлись - протяни руку и возьми своё!</b>\n"),
+        Format('🧔🏻: {player_outfits}\n'),
+        Format('👸🏼: {mob_outfits}\n'),
+        Format("<u>Накопленная магия</u>\n{player_bar}"),
         keyboards.battle_round_menu(),
         state=Battle.battle_round,
         getter=getters.get_battle_state
@@ -54,7 +53,8 @@ def battle_round_window():
 
 def round_result_window():
     return Window(
-        Const("output_remove_generator"),
+        # Format("output_remove_generator"),
+        Format('{outfit_remove_text}'),
         keyboards.round_result_menu(),
         state=Battle.round_result,
         getter=getters.round_result_getter

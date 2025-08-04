@@ -2,8 +2,9 @@ import datetime as dt
 import random
 
 from config.mongo_config import mobs
-from utils.constants import (
-    NAMES, OUTFIT_PARTS, PERSONAS, QUOTES, SUB_TITLES, TITLES)
+from text_constants.outfit import OUTFIT_PARTS
+from text_constants.mobs_quotes import QUOTES
+from text_constants.mobs_personas import NAMES, TITLES, SUB_TITLES, PERSONAS
 
 
 def generate_random_mob():

@@ -31,7 +31,7 @@ def mob_info_menu():
         Button(
             Const('💞 Начать поединок'),
             'battle_start',
-            on_click=selected.on_battle_round,
+            on_click=selected.on_battle_start,
         )
     )
 
@@ -44,7 +44,7 @@ def battle_round_menu():
             on_click=selected.on_escape,
         ),
         Button(
-            Const("🧙🏻‍♀️ Обзор"),
+            Const("💃🏻 Обзор"),
             id="outfit",
             on_click=selected.on_outfit,
         ),
@@ -72,6 +72,6 @@ def round_result_menu():
         Button(
             Const("Продолжить ❯❯"),
             id="outfit",
-            on_click=selected.next_round,
+            on_click=selected.on_next_round,
         ),
     )
