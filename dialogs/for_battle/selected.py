@@ -98,7 +98,7 @@ async def on_draw(callback: CallbackQuery, button: Button, manager: DialogManage
     battle = battles.find_one({"_id": ObjectId(battle_id)})
 
     if battle["player_state"]["stop"]:
-        await callback.answer("Ты уже произнёс заклинание!")
+        await callback.answer("Вы уже остановили поглащение магии!")
         return
 
     deck = battle["deck"]
@@ -106,7 +106,7 @@ async def on_draw(callback: CallbackQuery, button: Button, manager: DialogManage
     in_play = deck["in_play"]
 
     if not available:
-        await callback.answer("Колода закончилась!")
+        await callback.answer("Источник магии иссяк!")
         return
 
     # --- Игрок тянет карту ---
@@ -120,7 +120,7 @@ async def on_draw(callback: CallbackQuery, button: Button, manager: DialogManage
 
     if player_total > 21:
         battle["player_state"]["stop"] = True
-        await callback.answer(f"💥 Перебор! ({player_total})")
+        await callback.answer(f"‼️ Магия перехлестнула Вас")
 
         # Моб доигрывает автоматически
         auto_play_mob(battle)
@@ -134,7 +134,7 @@ async def on_draw(callback: CallbackQuery, button: Button, manager: DialogManage
         }})
         await manager.switch_to(Battle.round_result)
     else:
-        await callback.answer(f"✨ Новое заклинание: {player_card['name']} ({player_card['power']})")
+        await callback.answer(f"✨ Вы зачерпнули из магической сферы ⋆｡˚ {player_card['magic_type']} ⋆｡˚ ({player_card['power']})")
 
     # Ход моба, если он не остановился
     if not battle["mob_state"]["stop"]:
