@@ -39,15 +39,18 @@ EROTIC_DESCRIPTIONS = {
     ]
 }
 
+
 def get_accusative(noun):
     """Возвращает существительное в винительном падеже (кого? что?)"""
     parsed = morph.parse(noun)[0]
     return parsed.inflect({'accs'}).word
 
+
 def get_genitive(noun):
     """Возвращает существительное в родительном падеже (кого? чего?)"""
     parsed = morph.parse(noun)[0]
     return parsed.inflect({'gent'}).word
+
 
 def generate_undressing_text(opponent_name, clothing_type, clothing_name, spell):
     # Выбираем случайный предмет одежды и склоняем его

@@ -14,8 +14,6 @@ from dialogs.for_battle.states import Battle
 from text_constants.deck import FULL_DECK
 from services.mob_ai import MobAI
 
-from . import states
-
 
 def draw_initial_spell(deck: list) -> dict:
     return random.choice(deck)
@@ -44,8 +42,8 @@ def create_battle(player_id, mob_id):
             "outfit_left": 6,
             "stop": False
         },
-        "status": "active",
-        "winner": None,
+        "battle_finished": False,
+        "battle_winner": None,
         "created_at": dt.datetime.now(),
         "updated_at": dt.datetime.now()
     }
@@ -53,7 +51,7 @@ def create_battle(player_id, mob_id):
 
 
 async def on_generate_mob(callback, widget, manager: DialogManager):
-    await manager.switch_to(states.Battle.show_enemy_info)
+    await manager.switch_to(Battle.show_enemy_info)
 
 
 async def on_battle_start(callback, widget, manager: DialogManager):
@@ -63,7 +61,117 @@ async def on_battle_start(callback, widget, manager: DialogManager):
     mob_id = context.dialog_data['mob_id']
     battle_id = create_battle(user_id, ObjectId(mob_id))
     context.dialog_data.update(battle_id=str(battle_id))
-    await manager.switch_to(states.Battle.battle_round)
+    await manager.switch_to(Battle.battle_round)
+
+
+def prepare_next_round(battle: dict) -> dict:
+    player_outfit = battle["player_state"].get("outfit_left", 6)
+    mob_outfit = battle["mob_state"].get("outfit_left", 6)
+    # Проверка завершения боя
+    if player_outfit == 0 and mob_outfit == 0:
+        battle["battle_winner"] = "draw"
+        battle["battle_finished"] = True
+    elif player_outfit == 0:
+        battle["battle_winner"] = "mob"
+        battle["battle_finished"] = True
+    elif mob_outfit == 0:
+        battle["battle_winner"] = "player"
+        battle["battle_finished"] = True
+    else:
+        # Бой продолжается
+        battle["battle_finished"] = False
+        # Увеличиваем номер раунда
+        battle["round_number"] = battle.get("round_number", 1) + 1
+        # Возвращаем все карты из in_play в available и перемешиваем
+        deck = battle["deck"]
+        deck["available"].extend(deck["in_play"])
+        deck["in_play"] = []
+        random.shuffle(deck["available"])
+        battle["deck"] = deck
+        # Сброс состояния игроков (кроме одежды)
+        battle["player_state"]["hand"] = []
+        battle["player_state"]["stop"] = False
+        battle["mob_state"]["hand"] = []
+        battle["mob_state"]["stop"] = False
+    battle["updated_at"] = dt.datetime.now()
+    return battle
+
+
+def evaluate_round_result(battle: dict) -> dict:
+    player_hand = battle["player_state"]["hand"]
+    mob_hand = battle["mob_state"]["hand"]
+
+    player_total = sum(card["power"] for card in player_hand)
+    mob_total = sum(card["power"] for card in mob_hand)
+
+    player_outfits = battle["player_state"].get("outfit_left", 6)
+    mob_outfits = battle["mob_state"].get("outfit_left", 6)
+
+    # 1. Определяем победителя раунда
+    if player_total > 21 and mob_total > 21:
+        winner = "draw"
+    elif player_total > 21:
+        winner = "mob"
+    elif mob_total > 21:
+        winner = "player"
+    elif player_total > mob_total:
+        winner = "player"
+    elif mob_total > player_total:
+        winner = "mob"
+    else:
+        winner = "draw"
+
+    # 2. Сколько одежды теряется
+    outfit_lost = 1
+    mob_outfit_removed = 0
+    player_outfit_removed = 0
+
+    if winner == "player":
+        mob_outfit_removed = min(outfit_lost, mob_outfits)
+        mob_outfits -= mob_outfit_removed
+    elif winner == "mob":
+        player_outfit_removed = min(outfit_lost, player_outfits)
+        player_outfits -= player_outfit_removed
+    else:  # draw
+        mob_outfit_removed = min(outfit_lost, mob_outfits)
+        player_outfit_removed = min(outfit_lost, player_outfits)
+        mob_outfits -= mob_outfit_removed
+        player_outfits -= player_outfit_removed
+
+    # 4. Сохраняем результаты текущего раунда
+    round_number = battle.get("round_number", 1)
+    if "rounds" not in battle:
+        battle["rounds"] = {}
+
+    battle["rounds"][str(round_number)] = {
+        "winner": winner,
+        "mob_outfit_removed": mob_outfit_removed,
+        "player_outfit_removed": player_outfit_removed,
+        # Текст будет добавлен позже
+    }
+
+    # 5. Обновляем состояние участников
+    battle["player_state"]["outfit_left"] = player_outfits
+    battle["mob_state"]["outfit_left"] = mob_outfits
+
+    # 6. Также сохраняем это в поле round_result для текущего экрана
+    battle["round_result"] = {
+        "winner": winner,
+        "mob_outfit_removed": mob_outfit_removed,
+        "player_outfit_removed": player_outfit_removed,
+    }
+
+    # 7. Определяем финального победителя поединка
+    if player_outfits == 0 and mob_outfits == 0:
+        battle["battle_winner"] = "draw"
+    elif player_outfits == 0:
+        battle["battle_winner"] = "mob"
+    elif mob_outfits == 0:
+        battle["battle_winner"] = "player"
+    else:
+        battle["battle_winner"] = None  # Битва продолжается
+
+    return battle
 
 
 def auto_play_mob(battle: dict):
@@ -121,15 +229,14 @@ async def on_draw(callback: CallbackQuery, button: Button, manager: DialogManage
     if player_total > 21:
         battle["player_state"]["stop"] = True
         await callback.answer(f"‼️ Магия перехлестнула Вас")
-
         # Моб доигрывает автоматически
         auto_play_mob(battle)
-
-        # Обновление и переход к итогу раунда
+        battle_update = evaluate_round_result(battle)
         battles.update_one({"_id": battle["_id"]}, {"$set": {
-            "deck": battle["deck"],
-            "player_state": battle["player_state"],
-            "mob_state": battle["mob_state"],
+            f"rounds.{battle['round_number']}": battle_update["round_result"],
+            "player_state": battle_update["player_state"],
+            "mob_state": battle_update["mob_state"],
+            "deck": battle_update["deck"],
             "updated_at": dt.datetime.now()
         }})
         await manager.switch_to(Battle.round_result)
@@ -149,9 +256,17 @@ async def on_draw(callback: CallbackQuery, button: Button, manager: DialogManage
     }})
 
     if battle["player_state"]["stop"] and battle["mob_state"]["stop"]:
+        battle_update = evaluate_round_result(battle)
+        battles.update_one({"_id": battle["_id"]}, {"$set": {
+            f"rounds.{battle['round_number']}": battle_update["round_result"],
+            "player_state": battle_update["player_state"],
+            "mob_state": battle_update["mob_state"],
+            "deck": battle_update["deck"],
+            "updated_at": dt.datetime.now()
+        }})
         await manager.switch_to(Battle.round_result)
     else:
-        await manager.switch_to(states.Battle.battle_round)
+        await manager.switch_to(Battle.battle_round)
 
 
 async def on_stop(callback: CallbackQuery, button: Button, manager: DialogManager):
@@ -164,16 +279,16 @@ async def on_stop(callback: CallbackQuery, button: Button, manager: DialogManage
     # Моб доигрывает автоматически
     auto_play_mob(battle)
 
-    # Обновляем БД
+    battle_update = evaluate_round_result(battle)
     battles.update_one({"_id": battle["_id"]}, {"$set": {
-        "player_state": battle["player_state"],
-        "mob_state": battle["mob_state"],
-        "deck": battle["deck"],
+        f"rounds.{battle['round_number']}": battle_update["round_result"],
+        "player_state": battle_update["player_state"],
+        "mob_state": battle_update["mob_state"],
+        "deck": battle_update["deck"],
         "updated_at": dt.datetime.now()
     }})
 
     await callback.answer("🫳 Ты произнёс заклинание.")
-
     await manager.switch_to(Battle.round_result)
 
 
@@ -184,6 +299,30 @@ async def on_escape(callback: CallbackQuery, button: Button, manager: DialogMana
 
 async def on_next_round(callback: CallbackQuery, button: Button, manager: DialogManager):
     context = manager.current_context()
+    battle_id = context.dialog_data["battle_id"]
+    battle = battles.find_one({"_id": ObjectId(battle_id)})
+
+    # Подготовка к новому раунду (или завершение боя)
+    updated_battle = prepare_next_round(battle)
+
+    # Сохраняем бой
+    battles.update_one({"_id": battle["_id"]}, {"$set": {
+        "round_number": updated_battle.get("round_number"),
+        "deck": updated_battle["deck"],
+        "player_state": updated_battle["player_state"],
+        "mob_state": updated_battle["mob_state"],
+        "battle_winner": updated_battle.get("battle_winner"),
+        "battle_finished": updated_battle["battle_finished"],
+        "updated_at": updated_battle["updated_at"]
+    }})
+
+    if updated_battle["battle_finished"]:
+        await callback.answer("🏁 Битва завершена!")
+        await manager.switch_to(Battle.battle_result)
+    else:
+        await callback.answer("✨ Новый раунд начинается!")
+        await manager.switch_to(Battle.battle_round)
+
 
 
 async def on_outfit(callback: CallbackQuery, button: Button, manager: DialogManager):

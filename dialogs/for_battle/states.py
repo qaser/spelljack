@@ -6,5 +6,4 @@ class Battle(StatesGroup):
     show_enemy_info = State()
     battle_round = State()
     round_result = State()
-    # round_finish = State()
-    # battle_finish = State()
+    battle_result = State()

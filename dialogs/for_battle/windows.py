@@ -53,9 +53,20 @@ def battle_round_window():
 
 def round_result_window():
     return Window(
-        # Format("output_remove_generator"),
         Format('{outfit_remove_text}'),
+        Format("🧔🏻: {player_bar}"),
+        Format("👸🏼: {mob_bar}"),
         keyboards.round_result_menu(),
         state=Battle.round_result,
         getter=getters.round_result_getter
+    )
+
+
+def battle_result_window():
+    return Window(
+        Format("{result_text}"),
+        Button(Const("🔁 Сыграть снова"), id="restart", on_click=selected.on_battle_start),
+        Button(Const("🏃‍♂️ Выйти"), id="exit", on_click=exit_click),
+        state=Battle.battle_result,
+        getter=getters.get_battle_result_text
     )

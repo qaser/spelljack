@@ -12,8 +12,7 @@ dialog =  Dialog(
     windows.show_enemy_window(),
     windows.battle_round_window(),
     windows.round_result_window(),
-    # windows.round_finish_window(),
-    # windows.battle_finish_window(),
+    windows.battle_result_window(),
 )
 
 

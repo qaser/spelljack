@@ -85,84 +85,65 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs):
     battle_id = context.dialog_data["battle_id"]
     battle = battles.find_one({"_id": ObjectId(battle_id)})
 
-    player_hand = battle["player_state"]["hand"]
-    mob_hand = battle["mob_state"]["hand"]
+    round_number = str(battle.get("round_number", 1))
+    round_data = battle.get("rounds", {}).get(round_number, {})
 
-    player_total = sum(card["power"] for card in player_hand)
-    mob_total = sum(card["power"] for card in mob_hand)
+    winner = round_data.get("winner")
+    mob_outfit_removed = round_data.get("mob_outfit_removed", 0)
+    undressing_text = round_data.get("text", "Оба раздеваются")
 
     player_outfits = battle["player_state"].get("outfit_left", 6)
     mob_outfits = battle["mob_state"].get("outfit_left", 6)
 
-    # 1. Определяем победителя
-    if player_total > 21 and mob_total > 21:
-        winner = "draw"
-    elif player_total > 21:
-        winner = "mob"
-    elif mob_total > 21:
-        winner = "player"
-    elif player_total > mob_total:
-        winner = "player"
-    elif mob_total > player_total:
-        winner = "mob"
-    else:
-        winner = "draw"
+    player_hand = battle["player_state"]["hand"]
+    mob_hand = battle["mob_state"]["hand"]
+    player_total = sum(card["power"] for card in player_hand)
+    mob_total = sum(card["power"] for card in mob_hand)
 
-    # 2. Обновляем количество оставшейся одежды
-    outfit_lost = 1  # по умолчанию теряется 1
-    if winner == "player":
-        mob_outfits = max(0, mob_outfits - outfit_lost)
-    elif winner == "mob":
-        player_outfits = max(0, player_outfits - outfit_lost)
-    elif winner == "draw":
-        player_outfits = max(0, player_outfits - outfit_lost)
-        mob_outfits = max(0, mob_outfits - outfit_lost)
-
-    # 3. Сильнейшие заклинания
-    strongest_player_spell = max(player_hand, key=lambda c: c["power"]) if player_hand else None
-    strongest_mob_spell = max(mob_hand, key=lambda c: c["power"]) if mob_hand else None
-
-    # 4. Одежда, которую должен снять моб
-    mob_outfit_removed = outfit_lost if winner in ("player", "draw") else 0
-
-    # 5. Текст волшбы
-    # mob_name = battle["mob_state"]["name"]
-    mob_name = 'Моргана'
-    if mob_outfit_removed > 0 and strongest_player_spell:
-        outfit_index = battle["mob_state"].get("outfit_left", 6)  # до вычитания
-        outfit_key = str(outfit_index)
-        outfit_name = 'трусики'
-        if outfit_name:
-            undressing_text = generate_undressing_text(mob_name, str(outfit_index), outfit_name, strongest_player_spell["name"])
-            print(undressing_text)
+    # Если текста всё ещё нет, можно сгенерировать и обновить
+    if not round_data.get("text"):
+        if winner == 'player':
+            undressing_text = 'Моб раздевается'
+        elif winner == "mob":
+            undressing_text = 'Игрок раздевается'
         else:
-            undressing_text = f"{mob_name} потерял часть одежды."
-    elif winner == "mob" and strongest_mob_spell:
-        undressing_text = f"Заклинание {strongest_mob_spell['name']} выбило из тебя кусочек одежды..."
-    else:
-        undressing_text = "От заклинаний повеяло жаром, и вы оба чуть приоткрылись..."
+            undressing_text = 'Оба раздеваются'
 
-    # Обновляем состояние битвы
-    battles.update_one({"_id": battle["_id"]}, {"$set": {
-        "player_state.outfit_left": player_outfits,
-        "mob_state.outfit_left": mob_outfits,
-        "round_result": {
-            "winner": winner,
-            "strongest_player_spell": strongest_player_spell,
-            "strongest_mob_spell": strongest_mob_spell,
-            "mob_outfit_removed": mob_outfit_removed,
-            "text": undressing_text
-        }
-    }})
+        # Обновим и в rounds, и в round_result
+        battles.update_one({"_id": battle["_id"]}, {
+            "$set": {
+                f"rounds.{round_number}.text": undressing_text,
+                "round_result.text": undressing_text  # Если нужно для совместимости
+            }
+        })
 
-    result_data =  {
+    return {
         "winner": winner,
         "player_outfits": player_outfits,
         "mob_outfits": mob_outfits,
-        "strongest_player_spell": strongest_player_spell,
-        "strongest_mob_spell": strongest_mob_spell,
         "mob_outfit_removed": mob_outfit_removed,
         "outfit_remove_text": undressing_text,
+        "player_bar": make_bar(player_total),
+        "mob_bar": make_bar(mob_total),
     }
-    # print(result_data)
-    return result_data
+
+
+
+
+async def get_battle_result_text(dialog_manager: DialogManager, **kwargs):
+    context = dialog_manager.current_context()
+    battle_id = context.dialog_data["battle_id"]
+    battle = battles.find_one({"_id": ObjectId(battle_id)})
+
+    winner = battle.get("battle_winner")
+    mob_obj = mobs.find_one({"_id": battle["mob_id"]})
+    mob_name = f"{mob_obj['title']} {mob_obj['name']}"
+
+    if winner == "player":
+        result_text = f"✨ Ты полностью победил {mob_name} — ни ниточки не осталось! Твоя волшба восторжествовала!"
+    elif winner == "mob":
+        result_text = f"💥 {mob_name} оказался слишком силён. Твоя одежда разлетелась клочьями. Битва проиграна..."
+    else:
+        result_text = f"⚖️ Оба мага остались без прикрытия. Что за дуэль такая — ничья!"
+
+    return {"result_text": result_text}
