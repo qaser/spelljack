@@ -1,10 +1,8 @@
 from aiogram_dialog import Window
-from aiogram_dialog.widgets.kbd import Back, Button, Cancel, Row
+from aiogram_dialog.widgets.kbd import Back, Button, Cancel, Select
 from aiogram_dialog.widgets.text import Const, Format, Multi
 
-import utils.constants as texts
 from dialogs.for_battle.states import Battle
-
 from . import getters, keyboards, selected
 
 
@@ -18,6 +16,16 @@ async def exit_click(callback, button, dialog_manager):
 
 async def return_main_menu(callback, button, dialog_manager):
     await dialog_manager.switch_to(Battle.select_enemy_type)
+
+
+def select_magic_window():
+    return Window(
+        Const("Выберите тип магии:"),
+        keyboards.magic_type_menu(),
+        Cancel(Const('👣 Выход'), on_click=exit_click),
+        state=Battle.select_magic_type,
+        getter=getters.get_magic_types
+    )
 
 
 def select_enemy_window():
@@ -41,10 +49,11 @@ def show_enemy_window():
 
 def battle_round_window():
     return Window(
-        Const("<b>Потоки магии сошлись - протяни руку и возьми своё!</b>\n"),
-        Format('🧔🏻: {player_outfits}\n'),
-        Format('👸🏼: {mob_outfits}\n'),
-        Format("<u>Накопленная магия</u>\n{player_bar}"),
+        Multi(
+            Const("<b>Потоки магии сошлись - протяни руку и возьми своё!</b>\n"),
+            Const('🌫️ Туман обмана скрывает магию!\n', when=lambda data, w, m: data.get("fog_event", False)),
+            Format('🧔🏻: {player_outfits}\n👸🏼: {mob_outfits}\n<u>Накопленная магия</u>\n{player_bar}')
+        ),
         keyboards.battle_round_menu(),
         state=Battle.battle_round,
         getter=getters.get_battle_state
@@ -53,9 +62,7 @@ def battle_round_window():
 
 def round_result_window():
     return Window(
-        Format('{outfit_remove_text}'),
-        Format("🧔🏻: {player_bar}"),
-        Format("👸🏼: {mob_bar}"),
+        Format('{outfit_remove_text}\n🧔🏻: {player_bar}\n👸🏼: {mob_bar}'),
         keyboards.round_result_menu(),
         state=Battle.round_result,
         getter=getters.round_result_getter

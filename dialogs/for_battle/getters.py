@@ -1,149 +1,116 @@
 import datetime as dt
-import random
-
-from aiogram_dialog import DialogManager
+from typing import Dict, Any
 from bson import ObjectId
-from dateutil.relativedelta import relativedelta
+from aiogram_dialog import DialogManager
 
-from config.mongo_config import battles, mobs, players
-from dialogs.for_battle.states import Battle
-from services.mob_factory import generate_random_mob, get_random_mob_for_player
+from config.mongo_config import battles, mobs
+from services.mob_factory import generate_random_mob
 from text_generators.generate_mob_intro import generate_mob_intro
-from text_generators.outfit_remove_generator import generate_undressing_text
+from utils.constants import MAGIC_TYPE
 
 
-def outfit_emoji(count: int, is_player=True) -> str:
-    # Всего 6 уровней одежды, от нижнего к верхнему
-    player_emojis = ['🩲', '🩱', '🧦', '👗', '🧥', '🎀']
-    mob_emojis = ['🩳', '👚', '👖', '👔', '🧥', '📿']
-
-    # Переворачиваем порядок, чтобы верхняя одежда шла слева
-    outfit = player_emojis if is_player else mob_emojis
-    return ''.join(outfit[-count:])  # последние count элементов слева направо
-
-
-async def get_mob_data(dialog_manager: DialogManager, **kwargs):
+async def get_mob_data(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
     context = dialog_manager.current_context()
     mob_id = generate_random_mob()
-    context.dialog_data.update(mob_id=str(mob_id))
+    context.dialog_data["mob_id"] = str(mob_id)
     mob_data = mobs.find_one({"_id": mob_id})
     if not mob_data:
         return {"desc": "Ошибка загрузки информации о сопернике"}
-    enemy_intro = generate_mob_intro(mob_data)
-    return {"enemy_intro": enemy_intro}
+    return {"enemy_intro": generate_mob_intro(mob_data)}
 
 
-def make_bar(total: int) -> str:
-    MAX = 21
-    SLOTS = 10
-    if total > MAX:
-        return "🟥" * SLOTS + f" ({total})"
-    filled_ratio = total / MAX
-    filled_slots = round(filled_ratio * SLOTS)
-    empty_slots = SLOTS - filled_slots
-    if total <= 12:
-        filled = "🟨" * filled_slots
-    elif 13 <= total <= 17:
-        filled = "🟩" * filled_slots
-    elif total == 21:
-        filled = '🟪' * filled_slots
-    else:
-        filled = "🟧" * filled_slots
-    bar = filled + "⬜" * empty_slots
-    return f"{bar} ({total})"
-
+def make_bar(total: int, max_value: int = 21, slots: int = 10) -> str:
+    if total > max_value:
+        return "🟥" * slots + f" ({total})"
+    filled_ratio = total / max_value
+    filled_slots = round(filled_ratio * slots)
+    empty_slots = slots - filled_slots
+    filled = (
+        "🟪" if total == max_value else
+        "🟩" if 13 <= total <= 17 else
+        "🟧" if total > 17 else
+        "🟨"
+    ) * filled_slots
+    return f"{filled}{'⬜' * empty_slots} ({total})"
 
 
 def make_outfit_bar(outfits_left: int, total: int = 6) -> str:
-    return "".join(["❤️"] * outfits_left + ["🤍"] * (total - outfits_left))
+    return "❤️" * outfits_left + "🤍" * (total - outfits_left)
 
 
-async def get_battle_state(dialog_manager: DialogManager, **kwargs):
+async def get_battle_state(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
     context = dialog_manager.current_context()
     battle_id = context.dialog_data["battle_id"]
     battle = battles.find_one({"_id": ObjectId(battle_id)})
     player_hand = battle["player_state"]["hand"]
     mob_hand = battle["mob_state"]["hand"]
-    player_total = sum(card["power"] for card in player_hand)
-    mob_total = sum(card["power"] for card in mob_hand)
-    round_number = battle.get("round_number", 1)
-    player_outfits = battle["player_state"].get("outfit_left", 6)
-    mob_outfits = battle["mob_state"].get("outfit_left", 6)
+
+    player_bar = "🌫️ Туман скрывает магию!" if battle.get("fog_event", False) else make_bar(sum(card["power"] for card in player_hand))
+
     return {
-        "player_bar": make_bar(player_total),
-        "player_total": player_total,
-        "mob_total": mob_total,
+        "player_bar": player_bar,
+        "player_total": sum(card["power"] for card in player_hand),
+        "mob_total": sum(card["power"] for card in mob_hand),
         "battle_id": str(battle_id),
-        "round_number": round_number,
-        "player_outfits": make_outfit_bar(player_outfits),
-        "mob_outfits": make_outfit_bar(mob_outfits),
+        "round_number": battle.get("round_number", 1),
+        "player_outfits": make_outfit_bar(battle["player_state"].get("outfit_left", 6)),
+        "mob_outfits": make_outfit_bar(battle["mob_state"].get("outfit_left", 6)),
+        "mirror_event": battle.get("mirror_event", False),
+        "fog_event": battle.get("fog_event", False),
     }
 
 
-async def round_result_getter(dialog_manager: DialogManager, **kwargs):
+async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
     context = dialog_manager.current_context()
     battle_id = context.dialog_data["battle_id"]
     battle = battles.find_one({"_id": ObjectId(battle_id)})
-
     round_number = str(battle.get("round_number", 1))
     round_data = battle.get("rounds", {}).get(round_number, {})
 
     winner = round_data.get("winner")
     mob_outfit_removed = round_data.get("mob_outfit_removed", 0)
-    undressing_text = round_data.get("text", "Оба раздеваются")
+    undressing_text = (
+        'Моб раздевается' if winner == 'player' else
+        'Игрок раздевается' if winner == 'mob' else
+        'Оба раздеваются'
+    )
+    event_text = battle.get("event_description", "")
 
-    player_outfits = battle["player_state"].get("outfit_left", 6)
-    mob_outfits = battle["mob_state"].get("outfit_left", 6)
+    # Учитываем эффект "Зеркала" при отображении очков
+    player_total = sum(card["power"] for card in battle["player_state"]["hand"])
+    mob_total = sum(card["power"] for card in battle["mob_state"]["hand"])
+    if battle.get("mirror_event", False):
+        player_total, mob_total = mob_total, player_total
 
-    player_hand = battle["player_state"]["hand"]
-    mob_hand = battle["mob_state"]["hand"]
-    player_total = sum(card["power"] for card in player_hand)
-    mob_total = sum(card["power"] for card in mob_hand)
-
-    # Если текста всё ещё нет, можно сгенерировать и обновить
     if not round_data.get("text"):
-        if winner == 'player':
-            undressing_text = 'Моб раздевается'
-        elif winner == "mob":
-            undressing_text = 'Игрок раздевается'
-        else:
-            undressing_text = 'Оба раздеваются'
-
-        # Обновим и в rounds, и в round_result
-        battles.update_one({"_id": battle["_id"]}, {
-            "$set": {
-                f"rounds.{round_number}.text": undressing_text,
-                "round_result.text": undressing_text  # Если нужно для совместимости
-            }
-        })
+        battles.update_one(
+            {"_id": battle["_id"]},
+            {"$set": {f"rounds.{round_number}.text": undressing_text}}
+        )
 
     return {
         "winner": winner,
-        "player_outfits": player_outfits,
-        "mob_outfits": mob_outfits,
+        "player_outfits": battle["player_state"].get("outfit_left", 6),
+        "mob_outfits": battle["mob_state"].get("outfit_left", 6),
         "mob_outfit_removed": mob_outfit_removed,
-        "outfit_remove_text": undressing_text,
+        "outfit_remove_text": f"{undressing_text}\n{event_text}".strip(),
         "player_bar": make_bar(player_total),
         "mob_bar": make_bar(mob_total),
     }
 
 
-
-
-async def get_battle_result_text(dialog_manager: DialogManager, **kwargs):
+async def get_battle_result_text(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
     context = dialog_manager.current_context()
     battle_id = context.dialog_data["battle_id"]
     battle = battles.find_one({"_id": ObjectId(battle_id)})
-
     winner = battle.get("battle_winner")
-    mob_obj = mobs.find_one({"_id": battle["mob_id"]})
-    mob_name = f"{mob_obj['title']} {mob_obj['name']}"
-
-    if winner == "player":
-        result_text = f"✨ Ты полностью победил {mob_name} — ни ниточки не осталось! Твоя волшба восторжествовала!"
-    elif winner == "mob":
-        result_text = f"💥 {mob_name} оказался слишком силён. Твоя одежда разлетелась клочьями. Битва проиграна..."
-    else:
-        result_text = f"⚖️ Оба мага остались без прикрытия. Что за дуэль такая — ничья!"
-
+    result_text = (
+        "Твоя волшба восторжествовала!" if winner == "player" else
+        "Битва проиграна..." if winner == "mob" else
+        "Ничья!"
+    )
     return {"result_text": result_text}
+
+
+async def get_magic_types(dialog_manager: DialogManager, **kwargs) -> Dict[str, list]:
+    return {"magic_types": MAGIC_TYPE}

@@ -5,6 +5,7 @@ from config.mongo_config import mobs
 from text_constants.outfit import OUTFIT_PARTS
 from text_constants.mobs_quotes import QUOTES
 from text_constants.mobs_personas import NAMES, TITLES, SUB_TITLES, PERSONAS
+from utils.constants import MAGIC_TYPE
 
 
 def generate_random_mob():
@@ -13,7 +14,7 @@ def generate_random_mob():
     # Выбираем персонализированные параметры
     persona = random.choice(list(PERSONAS.keys()))
     persona_desc = random.choice(PERSONAS[persona]['descriptors'])
-    magic_type = random.choice(['Флирт', 'Соблазн', 'Вожделение', 'Искушение'])
+    magic_type = random.choice(MAGIC_TYPE)
     strategy = random.choice(['aggressive', 'careful', 'balanced'])
 
     # Генерируем одежду

@@ -8,6 +8,7 @@ from dialogs.for_battle.states import Battle
 
 router = Router()
 dialog =  Dialog(
+    windows.select_magic_window(),
     windows.select_enemy_window(),
     windows.show_enemy_window(),
     windows.battle_round_window(),
@@ -18,4 +19,4 @@ dialog =  Dialog(
 
 @router.message(Command("battle"))
 async def start_battle(message: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(Battle.select_enemy_type, mode=StartMode.RESET_STACK)
+    await dialog_manager.start(Battle.select_magic_type, mode=StartMode.RESET_STACK)
