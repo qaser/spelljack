@@ -6,9 +6,9 @@ def apply_buff(participant: str, card: Dict, battle: Dict) -> Dict:
     """Применяет случайный баф, если тип карты совпадает со специализацией участника."""
     buffs = [
         {"name": "preserve_outfit", "description": "Одежда защищена от потери в этом раунде!"},
-        {"name": "extra_draw", "description": "Можно взять ещё одну карту после остановки!"},
-        {"name": "discard_card", "description": "Сброшена карта с заменой на новую!"},
-        {"name": "block_mob", "description": "Противник пропускает ход!"}
+        # {"name": "extra_draw", "description": "Можно взять ещё одну карту после остановки!"},
+        # {"name": "discard_card", "description": "Сброшена карта с заменой на новую!"},
+        # {"name": "block_mob", "description": "Противник пропускает ход!"}
     ]
 
     magic_type = battle.get("magic_type" if participant == "player" else "mob_state.magic_type")

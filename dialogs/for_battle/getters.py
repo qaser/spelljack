@@ -19,19 +19,21 @@ async def get_mob_data(dialog_manager: DialogManager, **kwargs) -> Dict[str, str
     return {"enemy_intro": generate_mob_intro(mob_data)}
 
 
-def make_bar(total: int, max_value: int = 21, slots: int = 10) -> str:
+def make_bar(total: int, max_value: int = 21, slots: int = 10, show_total: bool = True) -> str:
     if total > max_value:
-        return "🟥" * slots + f" ({total})"
-    filled_ratio = total / max_value
-    filled_slots = round(filled_ratio * slots)
-    empty_slots = slots - filled_slots
-    filled = (
-        "🟪" if total == max_value else
-        "🟩" if 13 <= total <= 17 else
-        "🟧" if total > 17 else
-        "🟨"
-    ) * filled_slots
-    return f"{filled}{'⬜' * empty_slots} ({total})"
+        bar = "🟥" * slots
+    else:
+        filled_ratio = total / max_value
+        filled_slots = round(filled_ratio * slots)
+        empty_slots = slots - filled_slots
+        filled = (
+            "🟪" if total == max_value else
+            "🟩" if 13 <= total <= 17 else
+            "🟧" if total > 17 else
+            "🟨"
+        ) * filled_slots
+        bar = f"{filled}{'⬜' * empty_slots}"
+    return f"{bar} ({total})" if show_total else bar
 
 
 def make_outfit_bar(outfits_left: int, total: int = 6) -> str:
@@ -45,7 +47,10 @@ async def get_battle_state(dialog_manager: DialogManager, **kwargs) -> Dict[str,
     player_hand = battle["player_state"]["hand"]
     mob_hand = battle["mob_state"]["hand"]
 
-    player_bar = "🌫️ Туман скрывает магию!" if battle.get("fog_event", False) else make_bar(sum(card["power"] for card in player_hand))
+    player_bar = (
+        "🌫️ Туман скрывает магию!" if battle.get("fog_full", False) else
+        make_bar(sum(card["power"] for card in player_hand), show_total=not battle.get("fog_partial", False))
+    )
 
     return {
         "player_bar": player_bar,
@@ -56,7 +61,13 @@ async def get_battle_state(dialog_manager: DialogManager, **kwargs) -> Dict[str,
         "player_outfits": make_outfit_bar(battle["player_state"].get("outfit_left", 6)),
         "mob_outfits": make_outfit_bar(battle["mob_state"].get("outfit_left", 6)),
         "mirror_event": battle.get("mirror_event", False),
-        "fog_event": battle.get("fog_event", False),
+        "fog_full": battle.get("fog_full", False),
+        "fog_partial": battle.get("fog_partial", False),
+        "player_buff_description": battle["player_state"].get("buff_description", ""),
+        "mob_buff_description": battle["mob_state"].get("buff_description", ""),
+        "player_message": battle["player_state"].get("message", ""),
+        "player_stop": battle["player_state"].get("stop", False),
+        "player_extra_draw": battle["player_state"].get("buff") == "extra_draw",
     }
 
 
@@ -69,14 +80,18 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
 
     winner = round_data.get("winner")
     mob_outfit_removed = round_data.get("mob_outfit_removed", 0)
+    player_outfit_removed = round_data.get("player_outfit_removed", 0)
     undressing_text = (
         'Моб раздевается' if winner == 'player' else
         'Игрок раздевается' if winner == 'mob' else
         'Оба раздеваются'
     )
     event_text = battle.get("event_description", "")
+    buff_text = "\n".join(
+        [desc for desc in [battle["player_state"].get("buff_description", ""),
+                          battle["mob_state"].get("buff_description", "")] if desc]
+    )
 
-    # Учитываем эффект "Зеркала" при отображении очков
     player_total = sum(card["power"] for card in battle["player_state"]["hand"])
     mob_total = sum(card["power"] for card in battle["mob_state"]["hand"])
     if battle.get("mirror_event", False):
@@ -93,9 +108,11 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
         "player_outfits": battle["player_state"].get("outfit_left", 6),
         "mob_outfits": battle["mob_state"].get("outfit_left", 6),
         "mob_outfit_removed": mob_outfit_removed,
-        "outfit_remove_text": f"{undressing_text}\n{event_text}".strip(),
-        "player_bar": make_bar(player_total),
-        "mob_bar": make_bar(mob_total),
+        "player_outfit_removed": player_outfit_removed,
+        "outfit_remove_text": f"{undressing_text}\n{event_text}\n{buff_text}".strip(),
+        "player_bar": make_bar(player_total, show_total=not (battle.get("fog_full", False) or battle.get("fog_partial", False))),
+        "mob_bar": make_bar(mob_total, show_total=not (battle.get("fog_full", False) or battle.get("fog_partial", False))),
+        "player_message": battle["player_state"].get("message", ""),
     }
 
 

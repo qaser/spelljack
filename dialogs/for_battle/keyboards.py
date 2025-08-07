@@ -9,7 +9,7 @@ def magic_type_menu():
         Select(
             Format("{item}"),
             id="magic_type",
-            item_id_getter=lambda x: x,  # Используем строку как идентификатор
+            item_id_getter=lambda x: x,
             items="magic_types",
             on_click=selected.on_select_magic_type
         )
@@ -32,9 +32,19 @@ def mob_info_menu():
 def battle_round_menu():
     return Group(
         Button(Const("❮❮ Сбежать"), id="escape", on_click=selected.on_escape),
-        Button(Const("🌀 Больше!"), id="draw", on_click=selected.on_draw),
+        Button(
+            Const("🌀 Больше!"),
+            id="draw",
+            on_click=selected.on_draw,
+            when=lambda data, w, m: not data.get("player_stop", False) or data.get("player_extra_draw", False)
+        ),
         Button(Const("💃🏻 Обзор"), id="outfit", on_click=selected.on_outfit),
-        Button(Const("⚡️ Хватит..."), id="stop", on_click=selected.on_stop),
+        Button(
+            Const("⚡️ Хватит..."),
+            id="stop",
+            on_click=selected.on_stop,
+            when=lambda data, w, m: not data.get("player_stop", False)
+        ),
         width=2
     )
 

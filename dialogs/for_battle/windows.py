@@ -51,8 +51,12 @@ def battle_round_window():
     return Window(
         Multi(
             Const("<b>Потоки магии сошлись - протяни руку и возьми своё!</b>\n"),
-            Const('🌫️ Туман обмана скрывает магию!\n', when=lambda data, w, m: data.get("fog_event", False)),
-            Format('🧔🏻: {player_outfits}\n👸🏼: {mob_outfits}\n<u>Накопленная магия</u>\n{player_bar}')
+            Const('🌫️ Полный туман обмана скрывает магию!\n', when=lambda data, w, m: data.get("fog_full", False)),
+            Const('🌫️ Туман обмана скрывает очки!\n', when=lambda data, w, m: data.get("fog_partial", False) and not data.get("fog_full", False)),
+            Format('🧔🏻: {player_outfits}\n👸🏼: {mob_outfits}\n<u>Накопленная магия</u>\n{player_bar}'),
+            Format('{player_buff_description}', when=lambda data, w, m: data.get("player_buff_description", "")),
+            Format('{mob_buff_description}', when=lambda data, w, m: data.get("mob_buff_description", "")),
+            Format('{player_message}', when=lambda data, w, m: data.get("player_message", "") and not (data.get("fog_full", False) or data.get("fog_partial", False))),
         ),
         keyboards.battle_round_menu(),
         state=Battle.battle_round,
@@ -62,7 +66,10 @@ def battle_round_window():
 
 def round_result_window():
     return Window(
-        Format('{outfit_remove_text}\n🧔🏻: {player_bar}\n👸🏼: {mob_bar}'),
+        Multi(
+            Format('{outfit_remove_text}\n🧔🏻: {player_bar}\n👸🏼: {mob_bar}'),
+            Format('{player_message}', when=lambda data, w, m: data.get("player_message", "")),
+        ),
         keyboards.round_result_menu(),
         state=Battle.round_result,
         getter=getters.round_result_getter
