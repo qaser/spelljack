@@ -42,7 +42,7 @@ def show_enemy_window():
         Format('{enemy_intro}'),
         keyboards.mob_info_menu(),
         Back(Const('❮❮ Отказаться от поединка')),
-        state=Battle.show_enemy_info,
+        state=Battle.show_battle_preview,
         getter=getters.get_mob_data
     )
 
@@ -54,8 +54,6 @@ def battle_round_window():
             Const('🌫️ Полный туман обмана скрывает магию!\n', when=lambda data, w, m: data.get("fog_full", False)),
             Const('🌫️ Туман обмана скрывает очки!\n', when=lambda data, w, m: data.get("fog_partial", False) and not data.get("fog_full", False)),
             Format('🧔🏻: {player_outfits}\n👸🏼: {mob_outfits}\n<u>Накопленная магия</u>\n{player_bar}'),
-            Format('{player_buff_description}', when=lambda data, w, m: data.get("player_buff_description", "")),
-            Format('{mob_buff_description}', when=lambda data, w, m: data.get("mob_buff_description", "")),
             Format('{player_message}', when=lambda data, w, m: data.get("player_message", "") and not (data.get("fog_full", False) or data.get("fog_partial", False))),
         ),
         keyboards.battle_round_menu(),
@@ -83,4 +81,14 @@ def battle_result_window():
         Button(Const("🏃‍♂️ Выйти"), id="exit", on_click=exit_click),
         state=Battle.battle_result,
         getter=getters.get_battle_result_text
+    )
+
+
+def outfit_review_window():
+    return Window(
+        Format('{review_text}'),
+        Button(Const("🔁 Обновить текст"), id="rewrite", on_click=selected.on_outfit_review),
+        Back(Const('Назад')),
+        state=Battle.outfit_review,
+        getter=getters.get_mob_outfit,
     )

@@ -5,8 +5,9 @@ from aiogram_dialog import DialogManager
 
 from config.mongo_config import battles, mobs
 from services.mob_factory import generate_random_mob
-from text_generators.generate_mob_intro import generate_mob_intro
+from generators.generate_mob_intro import generate_mob_intro
 from utils.constants import MAGIC_TYPE
+from generators.outfit_review_generator import outfit_review_generator
 
 
 async def get_mob_data(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
@@ -131,3 +132,15 @@ async def get_battle_result_text(dialog_manager: DialogManager, **kwargs) -> Dic
 
 async def get_magic_types(dialog_manager: DialogManager, **kwargs) -> Dict[str, list]:
     return {"magic_types": MAGIC_TYPE}
+
+
+async def get_mob_outfit(dialog_manager: DialogManager, **kwargs):
+    context = dialog_manager.current_context()
+    mob_id = context.dialog_data["mob_id"]
+    battle_id = context.dialog_data["battle_id"]
+    mob_data = mobs.find_one({"_id": ObjectId(mob_id)})
+    outfits = mob_data['outfit']  # словаь с ключами-числами от 1 до 6
+    battle = battles.find_one({"_id": ObjectId(battle_id)})
+    mob_outfit_left = battle['mob_state']['outfit_left']  # число от 6 до 0
+    review_text = outfit_review_generator(mob_data['name'], outfits, mob_outfit_left)
+    return {'review_text': review_text}

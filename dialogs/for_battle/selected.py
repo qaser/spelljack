@@ -56,7 +56,7 @@ async def on_select_magic_type(callback: CallbackQuery, widget, manager: DialogM
 
 
 async def on_generate_mob(callback: CallbackQuery, widget, manager: DialogManager):
-    await manager.switch_to(Battle.show_enemy_info)
+    await manager.switch_to(Battle.show_battle_preview)
 
 
 async def on_battle_start(callback: CallbackQuery, widget, manager: DialogManager):
@@ -157,7 +157,7 @@ def auto_play_mob(battle: Dict):
             battle.get("fog_full", False) or battle.get("fog_partial", False)
         ) == "draw":
             mob_card = available.pop()
-            battle = apply_buff("mob", mob_card, battle)
+            # battle = apply_buff("mob", mob_card, battle)
             mob_ai.set_buff(battle["mob_state"].get("buff"))
             battle["mob_state"]["hand"].append(mob_card)
             in_play.append(mob_card)
@@ -196,7 +196,7 @@ async def on_draw(callback: CallbackQuery, button, manager: DialogManager):
         return
 
     player_card = battle["deck"]["available"].pop()
-    battle = apply_buff("player", player_card, battle)
+    # battle = apply_buff("player", player_card, battle)
     battle["player_state"]["hand"].append(player_card)
     battle["deck"]["in_play"].append(player_card)
     player_total = sum(c["power"] for c in battle["player_state"]["hand"])
@@ -255,5 +255,5 @@ async def on_next_round(callback: CallbackQuery, button, manager: DialogManager)
         await manager.switch_to(Battle.battle_round)
 
 
-async def on_outfit(callback: CallbackQuery, button, manager: DialogManager):
-    pass  # Placeholder for outfit overview logic
+async def on_outfit_review(callback: CallbackQuery, button, manager: DialogManager):
+    await manager.switch_to(Battle.outfit_review)

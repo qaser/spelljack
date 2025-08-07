@@ -38,7 +38,6 @@ def battle_round_menu():
             on_click=selected.on_draw,
             when=lambda data, w, m: not data.get("player_stop", False) or data.get("player_extra_draw", False)
         ),
-        Button(Const("💃🏻 Обзор"), id="outfit", on_click=selected.on_outfit),
         Button(
             Const("⚡️ Хватит..."),
             id="stop",
@@ -52,5 +51,6 @@ def battle_round_menu():
 def round_result_menu():
     return Column(
         Button(Const("❮❮ Сбежать"), id="escape", on_click=selected.on_escape),
+        Button(Const("💃🏻 Обзор соперника"), id="outfit", on_click=selected.on_outfit_review),
         Button(Const("Продолжить ❯❯"), id="next_round", on_click=selected.on_next_round),
     )
