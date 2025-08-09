@@ -6,6 +6,8 @@ from dialogs.for_battle.states import Battle
 from . import getters, keyboards, selected
 
 
+ROUND_TITLE = ('Обращайся к магическому потоку, черпай силу и произноси '
+               'заклинания чтобы победить волшебницу и ... раздеть её.\n')
 FOG_TEXT = ('<i>Твой разум затуманен возбуждением от вида '
             'полуобнаженного тела чародейки. Ты не можешь '
             'сконцентрироваться и читать магический поток.</i>\n')
@@ -57,7 +59,8 @@ def show_enemy_window():
 def battle_round_window():
     return Window(
         Multi(
-            Format('{spell_cast}\n'),
+            Const(ROUND_TITLE),
+            # Format('{spell_cast}\n'),
             Const(FULL_FOG_TEXT, when=lambda data, w, m: data.get("fog_full", False)),
             Const(FOG_TEXT, when=lambda data, w, m: data.get("fog_partial", False) and not data.get("fog_full", False)),
             Format('🧔🏻: {player_outfits}\n👸🏼: {mob_outfits}\n'),
@@ -76,7 +79,7 @@ def battle_round_window():
 def round_result_window():
     return Window(
         Multi(
-            Format('{outfit_remove_text}\n'),
+            Format('<i>{outfit_remove_text}</i>\n'),
             Format('<blockquote>{mob_phrase}</blockquote>\n'),
             Format('🧔🏻: {player_bar}\n👸🏼: {mob_bar}\n'),
             Format('{event_text}\n'),
