@@ -527,7 +527,7 @@ class UndressGenerator:
         return f"{random.choice(prefixes)} {clothing_type}".strip()
 
     def generate(self, mob_data: Dict, mob_outfit_left) -> str:
-        mob_outfit_left = str(mob_outfit_left + 1)
+        mob_outfit_left = str(int(mob_outfit_left) + 1)
         # 'Девушка полностью обнажена и готова сделать что угодно ради возврата своих магических сил.'
         # Генерируем полное название одежды
         clothing_type = mob_data['outfit'][mob_outfit_left]
