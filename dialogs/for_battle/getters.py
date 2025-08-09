@@ -2,12 +2,15 @@ import datetime as dt
 from typing import Dict, Any
 from bson import ObjectId
 from aiogram_dialog import DialogManager
+import random
 
 from config.mongo_config import battles, mobs
 from services.mob_factory import generate_random_mob
 from generators.generate_mob_intro import generate_mob_intro
 from utils.constants import MAGIC_TYPE
 from generators.outfit_review_generator import outfit_review_generator
+from generators.text_generators import UndressGenerator
+from text_constants.mobs_quotes import QUOTES
 
 
 async def get_mob_data(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
@@ -75,6 +78,7 @@ async def get_battle_state(dialog_manager: DialogManager, **kwargs) -> Dict[str,
 async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
     context = dialog_manager.current_context()
     battle_id = context.dialog_data["battle_id"]
+    mob_id = context.dialog_data["mob_id"]
     battle = battles.find_one({"_id": ObjectId(battle_id)})
     round_number = str(battle.get("round_number", 1))
     round_data = battle.get("rounds", {}).get(round_number, {})
@@ -82,16 +86,28 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
     winner = round_data.get("winner")
     mob_outfit_removed = round_data.get("mob_outfit_removed", 0)
     player_outfit_removed = round_data.get("player_outfit_removed", 0)
-    undressing_text = (
-        'Моб раздевается' if winner == 'player' else
-        'Игрок раздевается' if winner == 'mob' else
-        'Оба раздеваются'
-    )
+    mob_data = mobs.find_one({"_id": ObjectId(mob_id)})
+    generator = UndressGenerator()
+    mob_outfit_left = battle["mob_state"]['outfit_left']
+    if winner == 'player':
+        undressing_text = generator.generate(mob_data, str(mob_outfit_left))
+        mob_phrase = random.choice(QUOTES['hurt'][mob_data['persona']])
+    elif winner == 'mob':
+        undressing_text = 'Магия волшебницы срывает с тебя очередной предмет одежды.'
+        mob_phrase = random.choice(QUOTES['cast'][mob_data['persona']])
+    else:
+        undressing_text = f'{generator.generate(mob_data, str(mob_outfit_left))}\nОднако и с тебя срывается часть одежды.'
+        mob_phrase = random.choice(QUOTES["lose_layer"][mob_data["persona"]])
+    # undressing_text = (
+    #     'Моб раздевается' if winner == 'player' else
+    #     'Игрок раздевается' if winner == 'mob' else
+    #     'Оба раздеваются'
+    # )
     event_text = battle.get("event_description", "")
-    buff_text = "\n".join(
-        [desc for desc in [battle["player_state"].get("buff_description", ""),
-                          battle["mob_state"].get("buff_description", "")] if desc]
-    )
+    # buff_text = "\n".join(
+    #     [desc for desc in [battle["player_state"].get("buff_description", ""),
+    #                       battle["mob_state"].get("buff_description", "")] if desc]
+    # )
 
     player_total = sum(card["power"] for card in battle["player_state"]["hand"])
     mob_total = sum(card["power"] for card in battle["mob_state"]["hand"])
@@ -103,14 +119,15 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
             {"_id": battle["_id"]},
             {"$set": {f"rounds.{round_number}.text": undressing_text}}
         )
-
     return {
         "winner": winner,
         "player_outfits": battle["player_state"].get("outfit_left", 6),
         "mob_outfits": battle["mob_state"].get("outfit_left", 6),
         "mob_outfit_removed": mob_outfit_removed,
         "player_outfit_removed": player_outfit_removed,
-        "outfit_remove_text": f"{undressing_text}\n{event_text}\n{buff_text}".strip(),
+        "outfit_remove_text": f'{undressing_text}\n'.strip(),
+        'mob_phrase': mob_phrase,
+        'event_text': event_text,
         "player_bar": make_bar(player_total, show_total=not (battle.get("fog_full", False) or battle.get("fog_partial", False))),
         "mob_bar": make_bar(mob_total, show_total=not (battle.get("fog_full", False) or battle.get("fog_partial", False))),
         "player_message": battle["player_state"].get("message", ""),

@@ -7,5 +7,4 @@ class Battle(StatesGroup):
     show_battle_preview = State()
     battle_round = State()
     round_result = State()
-    outfit_review = State()
     battle_result = State()

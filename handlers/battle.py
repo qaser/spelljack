@@ -15,7 +15,6 @@ dialog =  Dialog(
     windows.battle_round_window(),
     windows.round_result_window(),
     windows.battle_result_window(),
-    windows.outfit_review_window(),
 )
 
 

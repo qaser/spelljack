@@ -1,7 +1,7 @@
 import random
 from typing import Dict, List
 
-class EroticUndressGenerator:
+class UndressGenerator:
     def __init__(self):
         # Типы магии
         self.magic_types = ['Флирт', 'Соблазн', 'Вожделение', 'Искушение']
@@ -12,6 +12,7 @@ class EroticUndressGenerator:
             'лифчик': ['кружевной', 'бархатный'],
             'чулки': ['чёрные', 'сетчатые', 'ажурные'],
             'платье': ['шёлковое', 'обтягивающее', 'полупрозрачное', 'соблазнительное', 'короткое'],
+            'плащ': ['длинный', 'магический'],
             'пояс': ['магический', 'атласный']
         }
 
@@ -181,6 +182,7 @@ class EroticUndressGenerator:
                 "ткань прозрачнеет, демонстрируя, как соски твердеют на глазах",
                 "оно рвётся, обнажая тело, уже покрытое капельками похоти"
             ],
+            'плащ': ["он развязывается и падает на пол с мягким стуком",],
             'пояс': [
                 "он развязывается и падает на пол с мягким стуком",
                 "пряжка пояса раскрывается сама собой, освобождая талию",
@@ -383,11 +385,12 @@ class EroticUndressGenerator:
 
         # Части тела для реакций
         self.body_parts = {
-            'трусики': ["лобок", "попку", "бёдра", "интимные места", "влажную щёлочку", "пухлые губки", "аккуратный холмик", "нежную складочку",
-                        "розовый бутон", "блестящую от возбуждения плоть", "трепещущий капюшончик",
-                        "набухшие половые губки", "дрожащую от желания щель", "влажное сердечко",
-                        "пульсирующую плоть", "алый вход", "нежную розетку", "трепещущий бутон",
-                        "блестящую от соков щёлочку", "сочные губки"],
+            'трусики': [
+                "лобок", "попку", "бёдра", "интимные места", "сочные губки",
+                "влажную щёлочку", "пухлые губки", "аккуратный холмик",
+                "нежную складочку", "розовый бутон", "блестящие от возбуждения половые губы",
+                "набухшие половые губки", "дрожащую от желания 'киску'", "трепещущий бутон",
+            ],
             'лифчик': [
                 "грудь", "соски", "декольте", "пышные формы",
                 "набухшие сосочки", "твёрдые как ягоды соски", "розовые ареолы",
@@ -409,6 +412,7 @@ class EroticUndressGenerator:
                 "дрожащие плечи", "соблазнительную ложбинку на спине",
                 "трепещущий живот", "дрожащие бёдра", "соблазнительный изгиб ягодиц",
             ],
+            'плащ': ["платье", "талию",],
             'пояс': ["талию", "изгиб бедер", "линию живота"]
         }
 
@@ -473,14 +477,18 @@ class EroticUndressGenerator:
         prefixes = self.clothing_prefixes.get(clothing_type, [''])
         return f"{random.choice(prefixes)} {clothing_type}".strip()
 
-    def generate(self, mob_data: Dict, clothing_type: str, magic_type: str) -> str:
+    def generate(self, mob_data: Dict, mob_outfit_left) -> str:
         """Генерация полного описания
         :param mob_data: Данные моба
         :param clothing_type: Тип одежды (трусики/лифчик/чулки/платье/пояс)
         :param magic_type: Тип магии
         """
+        if mob_outfit_left == '0':
+            return 'Девушка полностью обнажена и готова делать что угодно ради возврата своих магических сил.'
         # Генерируем полное название одежды
+        clothing_type = mob_data['outfit'][mob_outfit_left]
         clothing_item = self._get_clothing_name(clothing_type)
+        magic_type = mob_data.get('magic_type', 'Флирт')
 
         # Получаем формы слова
         clothing_nom = clothing_item
@@ -521,25 +529,33 @@ class EroticUndressGenerator:
         return full_text
 
 # Пример использования
-generator = EroticUndressGenerator()
+# generator = UndressGenerator()
 
-mob_data = {
-    'name': 'Сильвана',
-    'persona': 'страстная',
-    'gender': 'female'
-}
+# mob_data = {
+#     'name': 'Сильвана',
+#     'persona': 'страстная',
+#     'gender': 'female',
+#     'magic_type': "Соблазн",
+#     'outfit': {
+#         '1': 'трусики',
+#         '2': 'лифчик',
+#         '3': 'чулки',
+#         '4': 'платье',
+#         '5': 'плащ',
+#         '6': 'пояс',
+#     }
+# }
 
-# Генерация 5 разных описаний
-for _ in range(5):
-    print(generator.generate(mob_data, "трусики", "Вожделение"))
-    print("---")
-    print(generator.generate(mob_data, "лифчик", "Соблазн"))
-    print("---")
-    print(generator.generate(mob_data, "платье", "Флирт"))
-    print("---")
-    print(generator.generate(mob_data, "пояс", "Флирт"))
-    print("---")
-    print(generator.generate(mob_data, "чулки", "Флирт"))
-    print("---")
-    print(generator.generate(mob_data, "платье", "Флирт"))
-    print("\n=====\n")
+# for _ in range(5):
+#     print(generator.generate(mob_data, '1'))
+#     print("---")
+#     print(generator.generate(mob_data, '2'))
+#     print("---")
+#     print(generator.generate(mob_data, '3'))
+#     print("---")
+#     print(generator.generate(mob_data, '4'))
+#     print("---")
+#     print(generator.generate(mob_data, '5'))
+#     print("---")
+#     print(generator.generate(mob_data, '6'))
+#     print("\n=====\n")

@@ -49,8 +49,9 @@ def battle_round_menu():
 
 
 def round_result_menu():
-    return Column(
+    return Group(
         Button(Const("❮❮ Сбежать"), id="escape", on_click=selected.on_escape),
-        Button(Const("💃🏻 Обзор соперника"), id="outfit", on_click=selected.on_outfit_review),
+        # Button(Const("💃🏻 Обзор соперника"), id="outfit", on_click=selected.on_outfit_review),
         Button(Const("Продолжить ❯❯"), id="next_round", on_click=selected.on_next_round),
+        width=2
     )
