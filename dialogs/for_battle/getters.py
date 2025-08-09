@@ -52,7 +52,7 @@ async def get_battle_state(dialog_manager: DialogManager, **kwargs) -> Dict[str,
     mob_hand = battle["mob_state"]["hand"]
 
     player_bar = (
-        "🌫️ Туман скрывает магию!" if battle.get("fog_full", False) else
+        "<i>Уровень магической силы скрыт. Тебе придётся колдовать вслепую. Будь осторожен!</i>" if battle.get("fog_full", False) else
         make_bar(sum(card["power"] for card in player_hand), show_total=not battle.get("fog_partial", False))
     )
 
@@ -93,17 +93,17 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
         undressing_text = generator.generate(mob_data, str(mob_outfit_left))
         mob_phrase = random.choice(QUOTES['hurt'][mob_data['persona']])
     elif winner == 'mob':
-        undressing_text = 'Магия волшебницы срывает с тебя очередной предмет одежды.'
+        undressing_text = generator.generate_player_undress(mob_data)
         mob_phrase = random.choice(QUOTES['cast'][mob_data['persona']])
     else:
-        undressing_text = f'{generator.generate(mob_data, str(mob_outfit_left))}\nОднако и с тебя срывается часть одежды.'
+        undressing_text = f'{generator.generate(mob_data, mob_outfit_left)}\n\n{generator.generate_player_undress(mob_data)}'
         mob_phrase = random.choice(QUOTES["lose_layer"][mob_data["persona"]])
     # undressing_text = (
     #     'Моб раздевается' if winner == 'player' else
     #     'Игрок раздевается' if winner == 'mob' else
     #     'Оба раздеваются'
     # )
-    event_text = battle.get("event_description", "")
+    event_text = battle.get("event_description", "") if battle['mirror_event'] == True else ''
     # buff_text = "\n".join(
     #     [desc for desc in [battle["player_state"].get("buff_description", ""),
     #                       battle["mob_state"].get("buff_description", "")] if desc]

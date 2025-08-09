@@ -6,6 +6,13 @@ from dialogs.for_battle.states import Battle
 from . import getters, keyboards, selected
 
 
+FOG_TEXT = ('<i>Твой разум затуманен возбуждением от вида '
+            'полуобнаженного тела чародейки. Ты не можешь '
+            'сконцентрироваться и читать магический поток.</i>\n')
+FULL_FOG_TEXT = ('<i>Твоё возбуждение достигло предела! Магический поток '
+                 'начинает иссякать и ты беспорядочно начинаешь хватать энергию.</i>\n')
+
+
 async def exit_click(callback, button, dialog_manager):
     try:
         await dialog_manager.done()
@@ -51,10 +58,14 @@ def battle_round_window():
     return Window(
         Multi(
             Const("<b>Потоки магии сошлись - протяни руку и возьми своё!</b>\n"),
-            # Const('🌫️ Полный туман обмана скрывает магию!\n', when=lambda data, w, m: data.get("fog_full", False)),
-            Const('🌫️ Туман обмана скрывает очки!\n', when=lambda data, w, m: data.get("fog_partial", False) and not data.get("fog_full", False)),
-            Format('🧔🏻: {player_outfits}\n👸🏼: {mob_outfits}\n<u>Накопленная магия</u>\n{player_bar}'),
-            Format('{player_message}', when=lambda data, w, m: data.get("player_message", "") and not (data.get("fog_full", False) or data.get("fog_partial", False))),
+            Const(FULL_FOG_TEXT, when=lambda data, w, m: data.get("fog_full", False)),
+            Const(FOG_TEXT, when=lambda data, w, m: data.get("fog_partial", False) and not data.get("fog_full", False)),
+            Format('🧔🏻: {player_outfits}\n👸🏼: {mob_outfits}\n'),
+            Const('<u>Магическая сила</u>', when=lambda data, w, m: not (data.get("fog_full", False))),
+            Format('{player_bar}'),
+            Format(
+                '{player_message}',
+                when=lambda data, w, m: data.get("player_message", "") and not (data.get("fog_full", False) or data.get("fog_partial", False))),
         ),
         keyboards.battle_round_menu(),
         state=Battle.battle_round,

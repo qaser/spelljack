@@ -184,7 +184,7 @@ async def on_draw(callback: CallbackQuery, button, manager: DialogManager):
         if battle["player_state"].get("buff") == "extra_draw" and battle["deck"]["available"]:
             battle["player_state"]["stop"] = False
         else:
-            battle["player_state"]["message"] = "Вы уже остановили поглащение магии!"
+            battle["player_state"]["message"] = "Ты уже остановил поглащение магии!"
             battles.update_one({"_id": battle["_id"]}, {"$set": battle})
             await manager.switch_to(Battle.battle_round)
             return
@@ -204,8 +204,8 @@ async def on_draw(callback: CallbackQuery, button, manager: DialogManager):
     if not (battle.get("fog_full", False) or battle.get("fog_partial", False)):
         buff_message = battle["player_state"].get("buff_description", "")
         battle["player_state"]["message"] = (
-            f"Вы зачерпнули из магической сферы ({player_card['power']})\n{buff_message}" if buff_message
-            else f"Вы зачерпнули из магической сферы ({player_card['power']})"
+            f"\n<i>Ты произнёс заклинание <b>{player_card['name']}</b> ({player_card['power']})\n{buff_message}</i>" if buff_message
+            else f"\n<i>Ты произнёс заклинание <b>{player_card['name']}</b> ({player_card['power']})</i>"
         )
 
     if player_total > 21:
