@@ -11,6 +11,7 @@ from utils.constants import MAGIC_TYPE
 from generators.outfit_review_generator import outfit_review_generator
 from generators.text_generators import UndressGenerator
 from text_constants.mobs_quotes import QUOTES
+from text_constants.battle_stories import SPELL_CAST_TEXT
 
 
 async def get_mob_data(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
@@ -108,7 +109,8 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
     #     [desc for desc in [battle["player_state"].get("buff_description", ""),
     #                       battle["mob_state"].get("buff_description", "")] if desc]
     # )
-
+    mob_attr = random.choice([mob_data['name'], mob_data['title']])
+    spell_cast = f'{mob_attr} {random.choice(SPELL_CAST_TEXT)}'
     player_total = sum(card["power"] for card in battle["player_state"]["hand"])
     mob_total = sum(card["power"] for card in battle["mob_state"]["hand"])
     if battle.get("mirror_event", False):
@@ -128,6 +130,7 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
         "outfit_remove_text": f'{undressing_text}\n'.strip(),
         'mob_phrase': mob_phrase,
         'event_text': event_text,
+        'spell_cast': spell_cast,
         "player_bar": make_bar(player_total, show_total=not (battle.get("fog_full", False) or battle.get("fog_partial", False))),
         "mob_bar": make_bar(mob_total, show_total=not (battle.get("fog_full", False) or battle.get("fog_partial", False))),
         "player_message": battle["player_state"].get("message", ""),

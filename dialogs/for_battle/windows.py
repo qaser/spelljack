@@ -57,7 +57,7 @@ def show_enemy_window():
 def battle_round_window():
     return Window(
         Multi(
-            Const("<b>Потоки магии сошлись - протяни руку и возьми своё!</b>\n"),
+            Format('{spell_cast}'),
             Const(FULL_FOG_TEXT, when=lambda data, w, m: data.get("fog_full", False)),
             Const(FOG_TEXT, when=lambda data, w, m: data.get("fog_partial", False) and not data.get("fog_full", False)),
             Format('🧔🏻: {player_outfits}\n👸🏼: {mob_outfits}\n'),
