@@ -48,20 +48,24 @@ def make_outfit_bar(outfits_left: int, total: int = 6) -> str:
 async def get_battle_state(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
     context = dialog_manager.current_context()
     battle_id = context.dialog_data["battle_id"]
+    mob_id = context.dialog_data["mob_id"]
     battle = battles.find_one({"_id": ObjectId(battle_id)})
     player_hand = battle["player_state"]["hand"]
     mob_hand = battle["mob_state"]["hand"]
-
+    mob_data = mobs.find_one({"_id": ObjectId(mob_id)})
+    spell_cast_name = f'<b>{mob_data["name"]}</b> {random.choice(SPELL_CAST_TEXT)}'
+    spell_cast_title = f'{mob_data["title"]} {random.choice(SPELL_CAST_TEXT)}'
+    spell_cast = random.choice([spell_cast_name, spell_cast_title])
     player_bar = (
         "<i>Уровень магической силы скрыт. Тебе придётся колдовать вслепую. Будь осторожен!</i>" if battle.get("fog_full", False) else
         make_bar(sum(card["power"] for card in player_hand), show_total=not battle.get("fog_partial", False))
     )
-
     return {
         "player_bar": player_bar,
         "player_total": sum(card["power"] for card in player_hand),
         "mob_total": sum(card["power"] for card in mob_hand),
         "battle_id": str(battle_id),
+        'spell_cast': spell_cast,
         "round_number": battle.get("round_number", 1),
         "player_outfits": make_outfit_bar(battle["player_state"].get("outfit_left", 6)),
         "mob_outfits": make_outfit_bar(battle["mob_state"].get("outfit_left", 6)),
@@ -99,18 +103,7 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
     else:
         undressing_text = f'{generator.generate(mob_data, mob_outfit_left)}\n\n{generator.generate_player_undress(mob_data)}'
         mob_phrase = random.choice(QUOTES["lose_layer"][mob_data["persona"]])
-    # undressing_text = (
-    #     'Моб раздевается' if winner == 'player' else
-    #     'Игрок раздевается' if winner == 'mob' else
-    #     'Оба раздеваются'
-    # )
     event_text = battle.get("event_description", "") if battle['mirror_event'] == True else ''
-    # buff_text = "\n".join(
-    #     [desc for desc in [battle["player_state"].get("buff_description", ""),
-    #                       battle["mob_state"].get("buff_description", "")] if desc]
-    # )
-    mob_attr = random.choice([mob_data['name'], mob_data['title']])
-    spell_cast = f'{mob_attr} {random.choice(SPELL_CAST_TEXT)}'
     player_total = sum(card["power"] for card in battle["player_state"]["hand"])
     mob_total = sum(card["power"] for card in battle["mob_state"]["hand"])
     if battle.get("mirror_event", False):
@@ -130,7 +123,6 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
         "outfit_remove_text": f'{undressing_text}\n'.strip(),
         'mob_phrase': mob_phrase,
         'event_text': event_text,
-        'spell_cast': spell_cast,
         "player_bar": make_bar(player_total, show_total=not (battle.get("fog_full", False) or battle.get("fog_partial", False))),
         "mob_bar": make_bar(mob_total, show_total=not (battle.get("fog_full", False) or battle.get("fog_partial", False))),
         "player_message": battle["player_state"].get("message", ""),
