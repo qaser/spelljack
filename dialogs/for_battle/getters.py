@@ -12,6 +12,14 @@ from generators.outfit_review_generator import outfit_review_generator
 from generators.text_generators import UndressGenerator
 from text_constants.mobs_quotes import QUOTES
 from text_constants.battle_stories import SPELL_CAST_TEXT
+from .constants import DRAW_TEXTS, WIN_TEXTS, LOSE_TEXTS
+
+
+import random
+
+WIN_TEXT = random.choice(WIN_TEXTS)
+LOSE_TEXT = random.choice(LOSE_TEXTS)
+DRAW_TEXT = random.choice(DRAW_TEXTS)
 
 
 async def get_mob_data(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
@@ -135,9 +143,9 @@ async def get_battle_result_text(dialog_manager: DialogManager, **kwargs) -> Dic
     battle = battles.find_one({"_id": ObjectId(battle_id)})
     winner = battle.get("battle_winner")
     result_text = (
-        "Твоя волшба восторжествовала!" if winner == "player" else
-        "Битва проиграна..." if winner == "mob" else
-        "Ничья!"
+        WIN_TEXT if winner == "player" else
+        LOSE_TEXT if winner == "mob" else
+        DRAW_TEXT
     )
     return {"result_text": result_text}
 

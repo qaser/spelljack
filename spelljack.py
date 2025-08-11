@@ -13,6 +13,7 @@ from config.bot_config import bot, dp
 from config.mongo_config import admins
 from config.telegram_config import ADMIN_PASSWORD, MY_TELEGRAM_ID
 from handlers import battle, service
+from dialogs.for_scene.windows import scene_dialog
 
 
 @dp.message(Command('reset'))
@@ -97,6 +98,7 @@ async def main():
         service.router,
         battle.router,
         battle.dialog,
+        scene_dialog,
     )
     await setup_bot_commands(bot)
     setup_dialogs(dp)

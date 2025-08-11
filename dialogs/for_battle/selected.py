@@ -7,6 +7,7 @@ from bson import ObjectId
 
 from config.mongo_config import battles, mobs, players
 from dialogs.for_battle.states import Battle
+from dialogs.for_scene.states import Scene
 from text_constants.deck import NEW_DECK_ALTER
 from services.mob_ai import MobAI
 from .events import trigger_random_event
@@ -255,5 +256,10 @@ async def on_next_round(callback: CallbackQuery, button, manager: DialogManager)
         await manager.switch_to(Battle.battle_round)
 
 
-async def on_outfit_review(callback: CallbackQuery, button, manager: DialogManager):
-    await manager.switch_to(Battle.outfit_review)
+async def on_scene(callback: CallbackQuery, button, manager: DialogManager):
+    context = manager.current_context()
+    battle_id = context.dialog_data["battle_id"]
+    battle = battles.find_one({"_id": ObjectId(battle_id)})
+    scene_branch = battle['battle_winner']
+    await manager.done()
+    await manager.start(Scene.scene, data={"branch": scene_branch, "xp": 1000})

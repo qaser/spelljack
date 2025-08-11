@@ -94,8 +94,8 @@ def round_result_window():
 def battle_result_window():
     return Window(
         Format("{result_text}"),
-        Button(Const("🔁 Сыграть снова"), id="restart", on_click=selected.on_battle_start),
-        Button(Const("🏃‍♂️ Выйти"), id="exit", on_click=exit_click),
+        Button(Const("Продолжить ❯❯❯"), id="scene", on_click=selected.on_scene),
+        # Button(Const("🏃‍♂️ Выйти"), id="exit", on_click=exit_click),
         state=Battle.battle_result,
         getter=getters.get_battle_result_text
     )
