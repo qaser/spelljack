@@ -1,7 +1,12 @@
 import random
 
-from text_constants.mobs_quotes import  QUOTES
-from text_constants.battle_stories import FINAL_TOUCH, BODY_DESCRIPTIONS, EPIGRAPH_PHRASES, MAGIC_EFFECTS
+from text_constants.mobs_quotes import QUOTES
+from text_constants.battle_stories import (
+    FINAL_TOUCH,
+    BODY_DESCRIPTIONS,
+    EPIGRAPH_PHRASES,
+    MAGIC_EFFECTS,
+)
 
 
 def generate_mob_intro(mob_data):
@@ -34,7 +39,7 @@ def generate_mob_intro(mob_data):
         "<b>{name}</b>, {title} {sub_title}, чья {appearance} притягательность заставляет забыть о контроле.",
         "<b>{name}</b>, {title} {sub_title}, чья {appearance} красота — как заклинание, сковывающее волю.",
         "<b>{name}</b>, {title} {sub_title}, чья {appearance} аура манит в пучину запретных фантазий.",
-        "<b>{name}</b>, {title} {sub_title}, чья {appearance} сущность — как мелодия страсти, звучащая в ночи."
+        "<b>{name}</b>, {title} {sub_title}, чья {appearance} сущность — как мелодия страсти, звучащая в ночи.",
     ]
     body_templates = [
         "{body_desc}. Её {temperament} движения заставляют кровь бурлить в жилах.",
@@ -59,7 +64,7 @@ def generate_mob_intro(mob_data):
         "{body_desc}. Её {temperament} грация — как пламя, обжигающее ваши самые сокровенные мысли.",
         "{body_desc}. Её {temperament} жесты — как шёлк, скользящий по вашей коже.",
         "{body_desc}. Её {temperament} изгибы манят, словно запретный плод, жаждущий быть сорванным.",
-        "{body_desc}. Её {temperament} походка — как вызов, от которого кровь кипит в жилах."
+        "{body_desc}. Её {temperament} походка — как вызов, от которого кровь кипит в жилах.",
     ]
 
     # Выбираем элементы
@@ -82,7 +87,7 @@ def generate_mob_intro(mob_data):
         f"{intro}\n",
         f"<i>{body_text}</i>\n",
         f"<blockquote>{quote}</blockquote>\n",
-        f"<i>{final_text}</i>"
+        f"<i>{final_text}</i>",
     ]
 
     return "\n".join(intro_parts)

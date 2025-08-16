@@ -8,6 +8,7 @@ from config.telegram_config import MY_TELEGRAM_ID
 
 def admin_check(f):
     '''Проверка пользователя на права администратора'''
+
     @functools.wraps(f)
     async def wrapped_func(*args, **kwargs):
         func_args = inspect.getcallargs(f, *args, **kwargs)
@@ -20,11 +21,13 @@ def admin_check(f):
                 pass
         else:
             return await f(*args, **kwargs)
+
     return wrapped_func
 
 
 def superuser_check(f):
     '''Проверка на мой id'''
+
     @functools.wraps(f)
     async def wrapped_func(*args, **kwargs):
         func_args = inspect.getcallargs(f, *args, **kwargs)
@@ -33,6 +36,7 @@ def superuser_check(f):
             await bot.send_message(user_id, 'Вам не доступна эта команда')
         else:
             return await f(*args, **kwargs)
+
     return wrapped_func
 
 
@@ -46,7 +50,9 @@ def run_before(lastfunc, *args1, **kwargs1):
             finally:
                 lastfunc(*args1, **kwargs1)
                 return result
+
         return wrapped_func
+
     return run
 
 
@@ -61,9 +67,9 @@ def registration_check(f):
         if is_admin is None and is_user is None:
             await bot.send_message(
                 user_id,
-                ('Вы не зарегистрированы в системе.\n'
-                 'Вам не доступна эта команда')
+                ('Вы не зарегистрированы в системе.\n' 'Вам не доступна эта команда'),
             )
         else:
             return await f(*args, **kwargs)
+
     return wrapped_func

@@ -32,7 +32,9 @@ async def get_mob_data(dialog_manager: DialogManager, **kwargs) -> Dict[str, str
     return {"enemy_intro": generate_mob_intro(mob_data)}
 
 
-def make_bar(total: int, max_value: int = 21, slots: int = 10, show_total: bool = True) -> str:
+def make_bar(
+    total: int, max_value: int = 21, slots: int = 10, show_total: bool = True
+) -> str:
     if total > max_value:
         bar = "🟥" * slots
     else:
@@ -40,10 +42,9 @@ def make_bar(total: int, max_value: int = 21, slots: int = 10, show_total: bool 
         filled_slots = round(filled_ratio * slots)
         empty_slots = slots - filled_slots
         filled = (
-            "🟪" if total == max_value else
-            "🟩" if 13 <= total <= 17 else
-            "🟧" if total > 17 else
-            "🟨"
+            "🟪"
+            if total == max_value
+            else "🟩" if 13 <= total <= 17 else "🟧" if total > 17 else "🟨"
         ) * filled_slots
         bar = f"{filled}{'⬜' * empty_slots}"
     return f"{bar} ({total})" if show_total else bar
@@ -65,8 +66,12 @@ async def get_battle_state(dialog_manager: DialogManager, **kwargs) -> Dict[str,
     spell_cast_title = f'{mob_data["title"]} {random.choice(SPELL_CAST_TEXT)}'
     spell_cast = random.choice([spell_cast_name, spell_cast_title])
     player_bar = (
-        "<i>Уровень магической силы скрыт. Тебе придётся колдовать вслепую. Будь осторожен!</i>" if battle.get("fog_full", False) else
-        make_bar(sum(card["power"] for card in player_hand), show_total=not battle.get("fog_partial", False))
+        "<i>Уровень магической силы скрыт. Тебе придётся колдовать вслепую. Будь осторожен!</i>"
+        if battle.get("fog_full", False)
+        else make_bar(
+            sum(card["power"] for card in player_hand),
+            show_total=not battle.get("fog_partial", False),
+        )
     )
     return {
         "player_bar": player_bar,
@@ -88,7 +93,9 @@ async def get_battle_state(dialog_manager: DialogManager, **kwargs) -> Dict[str,
     }
 
 
-async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
+async def round_result_getter(
+    dialog_manager: DialogManager, **kwargs
+) -> Dict[str, Any]:
     context = dialog_manager.current_context()
     battle_id = context.dialog_data["battle_id"]
     mob_id = context.dialog_data["mob_id"]
@@ -111,7 +118,9 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
     else:
         undressing_text = f'{generator.generate(mob_data, mob_outfit_left)}\n\n{generator.generate_player_undress(mob_data)}'
         mob_phrase = random.choice(QUOTES["lose_layer"][mob_data["persona"]])
-    event_text = battle.get("event_description", "") if battle['mirror_event'] == True else ''
+    event_text = (
+        battle.get("event_description", "") if battle['mirror_event'] == True else ''
+    )
     player_total = sum(card["power"] for card in battle["player_state"]["hand"])
     mob_total = sum(card["power"] for card in battle["mob_state"]["hand"])
     if battle.get("mirror_event", False):
@@ -120,7 +129,7 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
     if not round_data.get("text"):
         battles.update_one(
             {"_id": battle["_id"]},
-            {"$set": {f"rounds.{round_number}.text": undressing_text}}
+            {"$set": {f"rounds.{round_number}.text": undressing_text}},
         )
     return {
         "winner": winner,
@@ -131,21 +140,31 @@ async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[s
         "outfit_remove_text": f'{undressing_text}\n'.strip(),
         'mob_phrase': mob_phrase,
         'event_text': event_text,
-        "player_bar": make_bar(player_total, show_total=not (battle.get("fog_full", False) or battle.get("fog_partial", False))),
-        "mob_bar": make_bar(mob_total, show_total=not (battle.get("fog_full", False) or battle.get("fog_partial", False))),
+        "player_bar": make_bar(
+            player_total,
+            show_total=not (
+                battle.get("fog_full", False) or battle.get("fog_partial", False)
+            ),
+        ),
+        "mob_bar": make_bar(
+            mob_total,
+            show_total=not (
+                battle.get("fog_full", False) or battle.get("fog_partial", False)
+            ),
+        ),
         "player_message": battle["player_state"].get("message", ""),
     }
 
 
-async def get_battle_result_text(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
+async def get_battle_result_text(
+    dialog_manager: DialogManager, **kwargs
+) -> Dict[str, str]:
     context = dialog_manager.current_context()
     battle_id = context.dialog_data["battle_id"]
     battle = battles.find_one({"_id": ObjectId(battle_id)})
     winner = battle.get("battle_winner")
     result_text = (
-        WIN_TEXT if winner == "player" else
-        LOSE_TEXT if winner == "mob" else
-        DRAW_TEXT
+        WIN_TEXT if winner == "player" else LOSE_TEXT if winner == "mob" else DRAW_TEXT
     )
     return {"result_text": result_text}
 

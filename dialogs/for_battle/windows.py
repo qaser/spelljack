@@ -6,13 +6,19 @@ from dialogs.for_battle.states import Battle
 from . import getters, keyboards, selected
 
 
-ROUND_TITLE = ('Обращайся к магическому потоку, черпай силу и произноси '
-               'заклинания чтобы победить волшебницу и ... раздеть её.\n')
-FOG_TEXT = ('<i>Твой разум затуманен возбуждением от вида '
-            'полуобнаженного тела чародейки. Ты не можешь '
-            'сконцентрироваться и читать магический поток.</i>\n')
-FULL_FOG_TEXT = ('<i>Твоё возбуждение достигло предела! Магический поток '
-                 'начинает иссякать и ты беспорядочно начинаешь хватать энергию.</i>\n')
+ROUND_TITLE = (
+    'Обращайся к магическому потоку, черпай силу и произноси '
+    'заклинания чтобы победить волшебницу и ... раздеть её.\n'
+)
+FOG_TEXT = (
+    '<i>Твой разум затуманен возбуждением от вида '
+    'полуобнаженного тела чародейки. Ты не можешь '
+    'сконцентрироваться и читать магический поток.</i>\n'
+)
+FULL_FOG_TEXT = (
+    '<i>Твоё возбуждение достигло предела! Магический поток '
+    'начинает иссякать и ты беспорядочно начинаешь хватать энергию.</i>\n'
+)
 
 
 async def exit_click(callback, button, dialog_manager):
@@ -33,7 +39,7 @@ def select_magic_window():
         keyboards.magic_type_menu(),
         Cancel(Const('👣 Выход'), on_click=exit_click),
         state=Battle.select_magic_type,
-        getter=getters.get_magic_types
+        getter=getters.get_magic_types,
     )
 
 
@@ -42,7 +48,7 @@ def select_enemy_window():
         Const("Выберите вариант противника"),
         keyboards.enemy_menu(),
         Cancel(Const('👣 Выход'), on_click=exit_click),
-        state=Battle.select_enemy_type
+        state=Battle.select_enemy_type,
     )
 
 
@@ -52,7 +58,7 @@ def show_enemy_window():
         keyboards.mob_info_menu(),
         Back(Const('❮❮ Отказаться от поединка')),
         state=Battle.show_battle_preview,
-        getter=getters.get_mob_data
+        getter=getters.get_mob_data,
     )
 
 
@@ -62,17 +68,26 @@ def battle_round_window():
             Const(ROUND_TITLE),
             # Format('{spell_cast}\n'),
             Const(FULL_FOG_TEXT, when=lambda data, w, m: data.get("fog_full", False)),
-            Const(FOG_TEXT, when=lambda data, w, m: data.get("fog_partial", False) and not data.get("fog_full", False)),
+            Const(
+                FOG_TEXT,
+                when=lambda data, w, m: data.get("fog_partial", False)
+                and not data.get("fog_full", False),
+            ),
             Format('🧔🏻: {player_outfits}\n👸🏼: {mob_outfits}\n'),
-            Const('<u>Магическая сила</u>', when=lambda data, w, m: not (data.get("fog_full", False))),
+            Const(
+                '<u>Магическая сила</u>',
+                when=lambda data, w, m: not (data.get("fog_full", False)),
+            ),
             Format('{player_bar}'),
             Format(
                 '{player_message}',
-                when=lambda data, w, m: data.get("player_message", "") and not (data.get("fog_full", False) or data.get("fog_partial", False))),
+                when=lambda data, w, m: data.get("player_message", "")
+                and not (data.get("fog_full", False) or data.get("fog_partial", False)),
+            ),
         ),
         keyboards.battle_round_menu(),
         state=Battle.battle_round,
-        getter=getters.get_battle_state
+        getter=getters.get_battle_state,
     )
 
 
@@ -83,11 +98,14 @@ def round_result_window():
             Format('<blockquote>{mob_phrase}</blockquote>\n'),
             Format('🧔🏻: {player_bar}\n👸🏼: {mob_bar}\n'),
             Format('{event_text}\n'),
-            Format('{player_message}', when=lambda data, w, m: data.get("player_message", "")),
+            Format(
+                '{player_message}',
+                when=lambda data, w, m: data.get("player_message", ""),
+            ),
         ),
         keyboards.round_result_menu(),
         state=Battle.round_result,
-        getter=getters.round_result_getter
+        getter=getters.round_result_getter,
     )
 
 
@@ -97,5 +115,5 @@ def battle_result_window():
         Button(Const("Продолжить ❯❯❯"), id="scene", on_click=selected.on_scene),
         # Button(Const("🏃‍♂️ Выйти"), id="exit", on_click=exit_click),
         state=Battle.battle_result,
-        getter=getters.get_battle_result_text
+        getter=getters.get_battle_result_text,
     )

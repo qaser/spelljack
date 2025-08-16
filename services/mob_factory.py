@@ -12,16 +12,15 @@ def generate_random_mob():
     gender = 'female'
     # Выбираем персонализированные параметры
     persona = random.choice(list(PERSONAS.keys()))
-    appearance = random.choice(['соблазнительная', 'загадочная', 'элегантная', 'опасная'])
+    appearance = random.choice(
+        ['соблазнительная', 'загадочная', 'элегантная', 'опасная']
+    )
     temperament = random.choice(PERSONAS[persona]['temperament'])
     magic_type = random.choice(MAGIC_TYPE)
     strategy = random.choice(['aggressive', 'careful', 'balanced'])
 
     # Генерируем одежду
-    outfit = {
-        part: random.choice(OUTFIT_PARTS[part])
-        for part in OUTFIT_PARTS
-    }
+    outfit = {part: random.choice(OUTFIT_PARTS[part]) for part in OUTFIT_PARTS}
 
     mob_data = {
         'gender': gender,

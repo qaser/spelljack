@@ -10,7 +10,7 @@ scene_window = Window(
     Format("{scene_text}"),
     make_scene_keyboard(),
     state=Scene.scene,
-    getter=scene_getter
+    getter=scene_getter,
 )
 
 

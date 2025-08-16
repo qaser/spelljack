@@ -5,10 +5,11 @@ from aiogram_dialog import Dialog, DialogManager, StartMode
 
 from dialogs.for_battle import windows
 from dialogs.for_battle.states import Battle
+from dialogs.for_scene.states import Scene
 
 
 router = Router()
-dialog =  Dialog(
+dialog = Dialog(
     windows.select_magic_window(),
     windows.select_enemy_window(),
     windows.show_enemy_window(),
@@ -21,3 +22,8 @@ dialog =  Dialog(
 @router.message(Command("battle"))
 async def start_battle(message: Message, dialog_manager: DialogManager):
     await dialog_manager.start(Battle.select_magic_type, mode=StartMode.RESET_STACK)
+
+
+@router.message(Command("mob"))
+async def start_scene(message: Message, dialog_manager: DialogManager):
+    await dialog_manager.start(Scene.scene, data={"branch": 'player', "xp": 1000})

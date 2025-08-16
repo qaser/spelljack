@@ -3,16 +3,16 @@ import random
 
 class MobAI:
     STRATEGIES = {
-        'careful': 0,    # Осторожный
-        'balanced': 1,   # Сбалансированный
-        'aggressive': 2  # Агрессивный
+        'careful': 0,  # Осторожный
+        'balanced': 1,  # Сбалансированный
+        'aggressive': 2,  # Агрессивный
     }
 
     def __init__(self, strategy='balanced'):
         self.strategy = self.STRATEGIES[strategy]
         self.influence = 6  # Начальные очки влияния
-        self.energy = 0     # Текущая энергия в раунде
-        self.buff = None    # Активный баф
+        self.energy = 0  # Текущая энергия в раунде
+        self.buff = None  # Активный баф
 
     def make_decision(self, player_influence, mirror_event=False, fog_event=False):
         """Возвращает 'draw' или 'stand' с учётом событий и бафов."""
@@ -26,7 +26,7 @@ class MobAI:
         thresholds = {
             0: 13 + risk_factor * 2,  # Осторожный
             1: 15 + risk_factor * 1,  # Сбалансированный
-            2: 17 + risk_factor * 0.5  # Агрессивный
+            2: 17 + risk_factor * 0.5,  # Агрессивный
         }
         # Повышаем порог для extra_draw
         if self.buff == "extra_draw":
@@ -41,7 +41,9 @@ class MobAI:
         if self.buff == "preserve_outfit":
             thresholds = {k: v + 1 for k, v in thresholds.items()}
 
-        logical_decision = 'draw' if self.energy < thresholds[self.strategy] else 'stand'
+        logical_decision = (
+            'draw' if self.energy < thresholds[self.strategy] else 'stand'
+        )
         randomness_chance = self.calculate_randomness_chance(risk_factor, fog_event)
         if random.random() < randomness_chance:
             return self.get_unexpected_decision(logical_decision, risk_factor)
@@ -73,7 +75,7 @@ class MobAI:
         weights = {
             0: [0.6, 0.3, 0.1],  # Осторожный: 60% энергия, 30% влияние, 10% события
             1: [0.4, 0.4, 0.2],  # Сбалансированный
-            2: [0.3, 0.5, 0.2]   # Агрессивный
+            2: [0.3, 0.5, 0.2],  # Агрессивный
         }
         w = weights[self.strategy]
         return w[0] * energy_risk + w[1] * influence_risk + w[2] * event_risk

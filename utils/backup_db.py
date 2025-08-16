@@ -30,7 +30,7 @@ async def send_dbs_mail(emails, db_name, backup_path):
     except IOError as err:
         await bot.send_message(
             chat_id=MY_TELEGRAM_ID,
-            text=f'Ошибка при открытии файла вложения: {err}\n\n{f_path}\n{file}'
+            text=f'Ошибка при открытии файла вложения: {err}\n\n{f_path}\n{file}',
         )
     try:
         smtp = smtplib.SMTP(SMTP_MAIL_SERVER, PORT)
@@ -41,6 +41,5 @@ async def send_dbs_mail(emails, db_name, backup_path):
         smtp.close()
     except smtplib.SMTPException as e:
         await bot.send_message(
-            chat_id=MY_TELEGRAM_ID,
-            text=f'Ошибка при отправке почты: {err}'
+            chat_id=MY_TELEGRAM_ID, text=f'Ошибка при отправке почты: {err}'
         )

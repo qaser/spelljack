@@ -33,11 +33,18 @@ def create_battle(player_id: int, mob_id: ObjectId, magic_type: str) -> ObjectId
             "magic_type": mob.get("magic_type", "Вожделение"),
             "buff": None,
             "buff_description": "",
-            "message": ""
+            "message": "",
         },
         "deck": {"available": full_deck, "in_play": [], "discarded": []},
         "round_number": 1,
-        "player_state": {"hand": [], "outfit_left": 6, "stop": False, "buff": None, "buff_description": "", "message": ""},
+        "player_state": {
+            "hand": [],
+            "outfit_left": 6,
+            "stop": False,
+            "buff": None,
+            "buff_description": "",
+            "message": "",
+        },
         "battle_finished": False,
         "battle_winner": None,
         "mirror_event": False,
@@ -45,12 +52,14 @@ def create_battle(player_id: int, mob_id: ObjectId, magic_type: str) -> ObjectId
         "fog_partial": False,
         "event_description": "",
         "created_at": dt.datetime.now(),
-        "updated_at": dt.datetime.now()
+        "updated_at": dt.datetime.now(),
     }
     return battles.insert_one(battle).inserted_id
 
 
-async def on_select_magic_type(callback: CallbackQuery, widget, manager: DialogManager, selected_magic: str):
+async def on_select_magic_type(
+    callback: CallbackQuery, widget, manager: DialogManager, selected_magic: str
+):
     context = manager.current_context()
     context.dialog_data["magic_type"] = selected_magic
     await manager.switch_to(Battle.select_enemy_type)
@@ -82,17 +91,34 @@ def evaluate_round_result(battle: Dict) -> Dict:
     mob_buff = battle["mob_state"].get("buff")
 
     winner = (
-        "draw" if player_total > 21 and mob_total > 21 else
-        "mob" if player_total > 21 else
-        "player" if mob_total > 21 else
-        "player" if player_total > mob_total else
-        "mob" if mob_total > player_total else
         "draw"
+        if player_total > 21 and mob_total > 21
+        else (
+            "mob"
+            if player_total > 21
+            else (
+                "player"
+                if mob_total > 21
+                else (
+                    "player"
+                    if player_total > mob_total
+                    else "mob" if mob_total > player_total else "draw"
+                )
+            )
+        )
     )
 
     outfit_lost = 1
-    mob_outfit_removed = min(outfit_lost, mob_outfits) if winner in ["player", "draw"] and mob_buff != "preserve_outfit" else 0
-    player_outfit_removed = min(outfit_lost, player_outfits) if winner in ["mob", "draw"] and player_buff != "preserve_outfit" else 0
+    mob_outfit_removed = (
+        min(outfit_lost, mob_outfits)
+        if winner in ["player", "draw"] and mob_buff != "preserve_outfit"
+        else 0
+    )
+    player_outfit_removed = (
+        min(outfit_lost, player_outfits)
+        if winner in ["mob", "draw"] and player_buff != "preserve_outfit"
+        else 0
+    )
 
     battle["player_state"]["outfit_left"] = player_outfits - player_outfit_removed
     battle["mob_state"]["outfit_left"] = mob_outfits - mob_outfit_removed
@@ -108,10 +134,14 @@ def evaluate_round_result(battle: Dict) -> Dict:
         "player_outfit_removed": player_outfit_removed,
     }
     battle["battle_winner"] = (
-        "draw" if battle["player_state"]["outfit_left"] == 0 and battle["mob_state"]["outfit_left"] == 0 else
-        "mob" if battle["player_state"]["outfit_left"] == 0 else
-        "player" if battle["mob_state"]["outfit_left"] == 0 else
-        None
+        "draw"
+        if battle["player_state"]["outfit_left"] == 0
+        and battle["mob_state"]["outfit_left"] == 0
+        else (
+            "mob"
+            if battle["player_state"]["outfit_left"] == 0
+            else "player" if battle["mob_state"]["outfit_left"] == 0 else None
+        )
     )
     # Очистка бафов и сообщений после раунда
     battle["player_state"]["buff"] = None
@@ -124,15 +154,34 @@ def evaluate_round_result(battle: Dict) -> Dict:
 
 
 def prepare_next_round(battle: Dict) -> Dict:
-    battle["battle_finished"] = battle["player_state"]["outfit_left"] == 0 or battle["mob_state"]["outfit_left"] == 0
+    battle["battle_finished"] = (
+        battle["player_state"]["outfit_left"] == 0
+        or battle["mob_state"]["outfit_left"] == 0
+    )
     if not battle["battle_finished"]:
         battle = trigger_random_event(battle)
         battle["round_number"] = battle.get("round_number", 1) + 1
         battle["deck"]["available"].extend(battle["deck"]["in_play"])
         battle["deck"]["in_play"] = []
         random.shuffle(battle["deck"]["available"])
-        battle["player_state"].update({"hand": [], "stop": False, "buff": None, "buff_description": "", "message": ""})
-        battle["mob_state"].update({"hand": [], "stop": False, "buff": None, "buff_description": "", "message": ""})
+        battle["player_state"].update(
+            {
+                "hand": [],
+                "stop": False,
+                "buff": None,
+                "buff_description": "",
+                "message": "",
+            }
+        )
+        battle["mob_state"].update(
+            {
+                "hand": [],
+                "stop": False,
+                "buff": None,
+                "buff_description": "",
+                "message": "",
+            }
+        )
     battle["updated_at"] = dt.datetime.now()
     return battle
 
@@ -152,11 +201,14 @@ def auto_play_mob(battle: Dict):
         return
 
     while not battle["mob_state"]["stop"] and available:
-        if mob_ai.make_decision(
-            battle["player_state"].get("outfit_left", 6),
-            battle.get("mirror_event", False),
-            battle.get("fog_full", False) or battle.get("fog_partial", False)
-        ) == "draw":
+        if (
+            mob_ai.make_decision(
+                battle["player_state"].get("outfit_left", 6),
+                battle.get("mirror_event", False),
+                battle.get("fog_full", False) or battle.get("fog_partial", False),
+            )
+            == "draw"
+        ):
             mob_card = available.pop()
             # battle = apply_buff("mob", mob_card, battle)
             mob_ai.set_buff(battle["mob_state"].get("buff"))
@@ -165,13 +217,19 @@ def auto_play_mob(battle: Dict):
             mob_total += mob_card["power"]
             mob_ai.energy = mob_total
             if not (battle.get("fog_full", False) or battle.get("fog_partial", False)):
-                battle["mob_state"]["message"] = f"Противник зачерпнул магию ({mob_card['power']})"
+                battle["mob_state"][
+                    "message"
+                ] = f"Противник зачерпнул магию ({mob_card['power']})"
             if mob_total > 21:
                 battle["mob_state"]["stop"] = True
                 battle["mob_state"]["message"] = "‼️ Магия перехлестнула противника!"
         else:
             battle["mob_state"]["stop"] = True
-        if battle["mob_state"].get("buff") == "extra_draw" and battle["mob_state"]["stop"] and available:
+        if (
+            battle["mob_state"].get("buff") == "extra_draw"
+            and battle["mob_state"]["stop"]
+            and available
+        ):
             battle["mob_state"]["stop"] = False
     battle["deck"].update({"available": available, "in_play": in_play})
 
@@ -182,7 +240,10 @@ async def on_draw(callback: CallbackQuery, button, manager: DialogManager):
     battle = battles.find_one({"_id": ObjectId(battle_id)})
 
     if battle["player_state"]["stop"]:
-        if battle["player_state"].get("buff") == "extra_draw" and battle["deck"]["available"]:
+        if (
+            battle["player_state"].get("buff") == "extra_draw"
+            and battle["deck"]["available"]
+        ):
             battle["player_state"]["stop"] = False
         else:
             battle["player_state"]["message"] = "Ты уже остановил поглащение магии!"
@@ -205,7 +266,8 @@ async def on_draw(callback: CallbackQuery, button, manager: DialogManager):
     if not (battle.get("fog_full", False) or battle.get("fog_partial", False)):
         buff_message = battle["player_state"].get("buff_description", "")
         battle["player_state"]["message"] = (
-            f"\n<i>Ты произнёс заклинание <b>{player_card['name']}</b> ({player_card['power']})\n{buff_message}</i>" if buff_message
+            f"\n<i>Ты произнёс заклинание <b>{player_card['name']}</b> ({player_card['power']})\n{buff_message}</i>"
+            if buff_message
             else f"\n<i>Ты произнёс заклинание <b>{player_card['name']}</b> ({player_card['power']})</i>"
         )
 

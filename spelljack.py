@@ -5,7 +5,11 @@ from aiogram import F
 from aiogram.filters.command import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
-    BotCommand, BotCommandScopeAllPrivateChats, Message, ReplyKeyboardRemove)
+    BotCommand,
+    BotCommandScopeAllPrivateChats,
+    Message,
+    ReplyKeyboardRemove,
+)
 from aiogram_dialog import setup_dialogs
 
 import utils.constants as const
@@ -21,8 +25,7 @@ async def reset_handler(message: Message, state: FSMContext):
     await message.delete()
     await state.clear()
     await message.answer(
-        'Текущее состояние бота сброшено',
-        reply_markup=ReplyKeyboardRemove()
+        'Текущее состояние бота сброшено', reply_markup=ReplyKeyboardRemove()
     )
 
 
@@ -36,10 +39,7 @@ async def admin_handler(message: Message, command: CommandObject):
     user = message.from_user
     # Проверка: передан ли пароль
     if not command.args:
-        await message.answer(
-            "❗ Пожалуйста, укажите пароль:",
-            parse_mode="Markdown"
-        )
+        await message.answer("❗ Пожалуйста, укажите пароль:", parse_mode="Markdown")
         return
     # Проверка: правильный ли пароль
     if command.args.strip() != ADMIN_PASSWORD:
@@ -49,12 +49,11 @@ async def admin_handler(message: Message, command: CommandObject):
     admins.update_one(
         {"user_id": user.id},
         {"$set": {"directions": ["gpa"], "username": user.full_name}},
-        upsert=True
+        upsert=True,
     )
     await message.answer("✅ Администратор добавлен")
     await bot.send_message(
-        MY_TELEGRAM_ID,
-        f"➕ Добавлен администратор {user.full_name}"
+        MY_TELEGRAM_ID, f"➕ Добавлен администратор {user.full_name}"
     )
     await message.delete()
 
@@ -76,16 +75,18 @@ async def setup_bot_commands(bot):
 
 # удаление сервисных сообщений
 @dp.message(
-        F.content_type.in_([
+    F.content_type.in_(
+        [
             'pinned_message',
             'left_chat_member',
             'forum_topic_created',
             'forum_topic_closed',
             'forum_topic_edited',
             'forum_topic_reopened',
-            'new_chat_members'
-        ])
+            'new_chat_members',
+        ]
     )
+)
 async def delete_service_pinned_message(message: Message):
     try:
         await message.delete()

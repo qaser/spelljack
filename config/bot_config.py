@@ -13,7 +13,7 @@ storage = MongoStorage(
     client=mongo_client,
     db_name="aiogram_fsm",
     collection_name="states",
-    key_builder=DefaultKeyBuilder(with_destiny=True)  # <-- Добавьте это
+    key_builder=DefaultKeyBuilder(with_destiny=True),  # <-- Добавьте это
 )
 
 bot = Bot(token=TELEGRAM_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
