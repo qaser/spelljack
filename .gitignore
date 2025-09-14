@@ -43,6 +43,10 @@ media/
 .media
 .media/
 
+static/
+.static
+.static/
+
 media/cache/
 
 run.sh

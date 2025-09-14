@@ -11,12 +11,13 @@ from aiogram.types import (
     ReplyKeyboardRemove,
 )
 from aiogram_dialog import setup_dialogs
+from middlewares.player_check import PlayerCheckMiddleware
 
 import utils.constants as const
 from config.bot_config import bot, dp
-from config.mongo_config import admins
+# from config.mongo_config import admins
 from config.telegram_config import ADMIN_PASSWORD, MY_TELEGRAM_ID
-from handlers import battle, service
+from handlers import battle, service, registration, play
 from dialogs.for_scene.windows import scene_dialog
 
 
@@ -25,37 +26,37 @@ async def reset_handler(message: Message, state: FSMContext):
     await message.delete()
     await state.clear()
     await message.answer(
-        'Текущее состояние бота сброшено', reply_markup=ReplyKeyboardRemove()
+        'Текущее состояние игры сброшено', reply_markup=ReplyKeyboardRemove()
     )
 
 
-@dp.message(Command('help'))
-async def help_handler(message: Message):
-    await message.answer(const.HELP_ADMIN)
+# @dp.message(Command('help'))
+# async def help_handler(message: Message):
+#     await message.answer(const.HELP_ADMIN)
 
 
-@dp.message(Command("admin"))
-async def admin_handler(message: Message, command: CommandObject):
-    user = message.from_user
-    # Проверка: передан ли пароль
-    if not command.args:
-        await message.answer("❗ Пожалуйста, укажите пароль:", parse_mode="Markdown")
-        return
-    # Проверка: правильный ли пароль
-    if command.args.strip() != ADMIN_PASSWORD:
-        await message.answer("🚫 Неверный пароль")
-        return
-    # Регистрация администратора
-    admins.update_one(
-        {"user_id": user.id},
-        {"$set": {"directions": ["gpa"], "username": user.full_name}},
-        upsert=True,
-    )
-    await message.answer("✅ Администратор добавлен")
-    await bot.send_message(
-        MY_TELEGRAM_ID, f"➕ Добавлен администратор {user.full_name}"
-    )
-    await message.delete()
+# @dp.message(Command("admin"))
+# async def admin_handler(message: Message, command: CommandObject):
+#     user = message.from_user
+#     # Проверка: передан ли пароль
+#     if not command.args:
+#         await message.answer("❗ Пожалуйста, укажите пароль:", parse_mode="Markdown")
+#         return
+#     # Проверка: правильный ли пароль
+#     if command.args.strip() != ADMIN_PASSWORD:
+#         await message.answer("🚫 Неверный пароль")
+#         return
+#     # Регистрация администратора
+#     admins.update_one(
+#         {"user_id": user.id},
+#         {"$set": {"directions": ["gpa"], "username": user.full_name}},
+#         upsert=True,
+#     )
+#     await message.answer("✅ Администратор добавлен")
+#     await bot.send_message(
+#         MY_TELEGRAM_ID, f"➕ Добавлен администратор {user.full_name}"
+#     )
+#     await message.delete()
 
 
 @dp.message(Command('start'))
@@ -95,9 +96,14 @@ async def delete_service_pinned_message(message: Message):
 
 
 async def main():
+    dp.message.middleware(PlayerCheckMiddleware())
     dp.include_routers(
         service.router,
+        registration.router,
+        play.router,
         battle.router,
+        registration.dialog,
+        play.dialog,
         battle.dialog,
         scene_dialog,
     )

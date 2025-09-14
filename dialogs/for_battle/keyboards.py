@@ -34,7 +34,7 @@ def mob_info_menu():
             on_click=selected.on_generate_mob,
         ),
         Button(
-            Const('💞 Начать поединок'),
+            Const('🌙  Начать поединок'),
             id='battle_start',
             on_click=selected.on_battle_start,
         ),
@@ -43,7 +43,13 @@ def mob_info_menu():
 
 def battle_round_menu():
     return Group(
-        Button(Const("❮❮ Сбежать"), id="escape", on_click=selected.on_escape),
+        # Button(Const("❮❮ Сбежать"), id="escape", on_click=selected.on_escape),
+        Button(
+            Const("⚡️ Хватит..."),
+            id="stop",
+            on_click=selected.on_stop,
+            when=lambda data, w, m: not data.get("player_stop", False),
+        ),
         Button(
             Const("🌀 Больше!"),
             id="draw",
@@ -51,22 +57,16 @@ def battle_round_menu():
             when=lambda data, w, m: not data.get("player_stop", False)
             or data.get("player_extra_draw", False),
         ),
-        Button(
-            Const("⚡️ Хватит..."),
-            id="stop",
-            on_click=selected.on_stop,
-            when=lambda data, w, m: not data.get("player_stop", False),
-        ),
         width=2,
     )
 
 
 def round_result_menu():
     return Group(
-        Button(Const("❮❮ Сбежать"), id="escape", on_click=selected.on_escape),
+        # Button(Const("❮❮ Сбежать"), id="escape", on_click=selected.on_escape),
         # Button(Const("💃🏻 Обзор соперника"), id="outfit", on_click=selected.on_outfit_review),
         Button(
-            Const("Продолжить ❯❯"), id="next_round", on_click=selected.on_next_round
+            Const("Следующий раунд ❯❯"), id="next_round", on_click=selected.on_next_round
         ),
         width=2,
     )

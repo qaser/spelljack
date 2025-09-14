@@ -3,7 +3,6 @@ import datetime as dt
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import FSInputFile, Message
-from pytz import timezone
 
 from config.bot_config import bot
 from config.telegram_config import MY_TELEGRAM_ID

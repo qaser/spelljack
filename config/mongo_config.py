@@ -10,6 +10,7 @@ admins = db['admins']
 players = db['players']
 mobs = db['mobs']
 battles = db['battles']
+mob_meta = db['mob_meta']
 
 '''
 players = {

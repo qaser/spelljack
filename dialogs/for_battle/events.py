@@ -2,43 +2,32 @@ import random
 from typing import Dict, Optional
 
 
+MIRROR_THRESHOLD = 3
+FOG_FULL_THRESHOLD = 4
+FOG_PARTIAL_THRESHOLD = 3
+
 def trigger_random_event(battle: Dict) -> Dict:
-    """Определяет и активирует случайное событие для раунда."""
-    events = [
-        {
-            "name": "mirror",
-            "chance": 0.1,
-            "description": "🪞 Магическое зеркало активировано: магическая сила были инвертирована!",
-        },
-        {
-            "name": "fog_full",
-            "chance": 0.05,
-            "description": "Магическая сила и прогресс скрыты!",
-        },
-        {
-            "name": "fog_partial",
-            "chance": 0.05,
-            "description": "Магическая сила скрыта, но прогресс виден!",
-        },
-        {"name": None, "chance": 0.8, "description": ""},
-    ]
+    """Определяет и активирует событие для раунда."""
+    # Reset flags
+    battle["mirror_event"] = False
+    battle["fog_full"] = False
+    battle["fog_partial"] = False
+    battle["event_description"] = ""
 
-    # Выбор события на основе вероятностей
-    total_chance = sum(event["chance"] for event in events)
-    rand = random.random() * total_chance
-    cumulative = 0
-    selected_event = None
+    # Check for mirror event (deterministic)
+    if battle.get("player_type_spell_count", 0) >= MIRROR_THRESHOLD:
+        battle["mirror_event"] = True
+        battle["event_description"] = "🌀 <b>Магическое зеркало активировано: магическая сила были инвертирована!</b>"
+        battle["player_type_spell_count"] = 0
+        return battle
 
-    for event in events:
-        cumulative += event["chance"]
-        if rand <= cumulative:
-            selected_event = event
-            break
-
-    # Установка флагов событий
-    battle["mirror_event"] = selected_event["name"] == "mirror"
-    battle["fog_full"] = selected_event["name"] == "fog_full"
-    battle["fog_partial"] = selected_event["name"] == "fog_partial"
-    battle["event_description"] = selected_event["description"]
+    # Check for fog events based on consecutive wins
+    consecutive_wins = battle.get("consecutive_player_wins", 0)
+    if consecutive_wins == FOG_FULL_THRESHOLD:
+        battle["fog_full"] = True
+        battle["event_description"] = "<b>Твоё возбуждение достигло предела! Магический поток начинает иссякать и ты беспорядочно начинаешь хватать энергию.</b>"
+    elif consecutive_wins == FOG_PARTIAL_THRESHOLD:
+        battle["fog_partial"] = True
+        battle["event_description"] = "<b>Твой разум затуманен возбуждением от вида полуобнаженного тела чародейки. Ты не можешь сконцентрироваться и читать магический поток.</b>"
 
     return battle
