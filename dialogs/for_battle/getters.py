@@ -77,11 +77,11 @@ async def get_mob_data(dialog_manager: DialogManager, **kwargs) -> Dict[str, str
     mob_id = generate_random_mob()
     context.dialog_data["mob_id"] = str(mob_id)
     mob_data = mobs.find_one({"_id": mob_id})
-    image, has_image = get_stage_image('presentation', mob_data.get('meta_id'))
+    # image, has_image = get_stage_image('presentation', mob_data.get('meta_id'))
     return {
         "enemy_intro": generate_mob_intro(mob_data),
-        'image': image,
-        'has_image': has_image
+        # 'image': image,
+        # 'has_image': has_image
     }
 
 def make_bar(
@@ -126,10 +126,10 @@ async def get_battle_state(dialog_manager: DialogManager, **kwargs) -> Dict[str,
     # Set image based on fog event
     meta_id = mob_data.get("meta_id")
     event_image, has_event_image = ('', False)
-    if battle.get("fog_full", False):
-        event_image, has_event_image = get_stage_image("demonstration_ass", meta_id)
-    elif battle.get("fog_partial", False):
-        event_image, has_event_image = get_stage_image("demonstration_breasts", meta_id)
+    # if battle.get("fog_full", False):
+    #     event_image, has_event_image = get_stage_image("demonstration_ass", meta_id)
+    # elif battle.get("fog_partial", False):
+    #     event_image, has_event_image = get_stage_image("demonstration_breasts", meta_id)
     return {
         "player_bar": player_bar,
         "player_total": sum(card["power"] for card in player_hand),
@@ -143,8 +143,8 @@ async def get_battle_state(dialog_manager: DialogManager, **kwargs) -> Dict[str,
         "fog_full": battle.get("fog_full", False),
         "fog_partial": battle.get("fog_partial", False),
         "player_message": battle["player_state"].get("message", ""),
-        "event_image": event_image,
-        "has_event_image": has_event_image,
+        # "event_image": event_image,
+        # "has_event_image": has_event_image,
     }
 
 async def round_result_getter(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
@@ -209,19 +209,19 @@ async def get_battle_result(dialog_manager: DialogManager, **kwargs) -> Dict[str
     winner = battle.get("battle_winner")
     mob_id = context.dialog_data["mob_id"]
     mob_data = mobs.find_one({"_id": ObjectId(mob_id)})
-    if winner == 'player':
-        image, has_image = get_stage_image('defeat', mob_data.get('meta_id'))
-    elif winner == 'mob':
-        image, has_image = get_stage_image('victory', mob_data.get('meta_id'))
-    else:
-        image, has_image = get_stage_image('demonstration_legs', mob_data.get('meta_id'))
+    # if winner == 'player':
+    #     image, has_image = get_stage_image('defeat', mob_data.get('meta_id'))
+    # elif winner == 'mob':
+    #     image, has_image = get_stage_image('victory', mob_data.get('meta_id'))
+    # else:
+    #     image, has_image = get_stage_image('demonstration_legs', mob_data.get('meta_id'))
     result_text = (
         WIN_TEXT if winner == "player" else LOSE_TEXT if winner == "mob" else DRAW_TEXT
     )
     return {
         "result_text": result_text,
-        'has_image': has_image,
-        'image': image
+        # 'has_image': has_image,
+        # 'image': image
     }
 
 async def get_magic_types(dialog_manager: DialogManager, **kwargs) -> Dict[str, list]:
