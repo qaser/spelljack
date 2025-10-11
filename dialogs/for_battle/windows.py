@@ -57,7 +57,7 @@ def select_enemy_window():
 
 def show_enemy_window():
     return Window(
-        DynamicMedia('image', when='has_image'),
+        # DynamicMedia('image', when='has_image'),
         Format('{enemy_intro}'),
         keyboards.mob_info_menu(),
         Back(Const('❮❮ Назад')),
@@ -68,7 +68,7 @@ def show_enemy_window():
 
 def battle_round_window():
     return Window(
-        DynamicMedia('event_image', when='has_event_image'),
+        # DynamicMedia('event_image', when='has_event_image'),
         Multi(
             Const(ROUND_TITLE),
             Const(FULL_FOG_TEXT, when=lambda data, w, m: data.get("fog_full", False)),
@@ -115,7 +115,7 @@ def round_result_window():
 
 def battle_result_window():
     return Window(
-        DynamicMedia('image', when='has_image'),
+        # DynamicMedia('image', when='has_image'),
         Format("{result_text}"),
         Button(Const("Продолжить ❯❯❯"), id="scene", on_click=selected.on_scene),
         # Button(Const("🏃‍♂️ Выйти"), id="exit", on_click=exit_click),
